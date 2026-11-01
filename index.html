@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>病棟薬剤師用 医学電卓</title>
+<!-- 検索エンジンに載せない -->
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
+<meta name="googlebot" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#eef3f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1520" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="医学電卓">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+
+/* 病棟薬剤師用 医学電卓：ホーム → カテゴリー → 計算画面。結果は画面下に常時表示 */
+:root{
+  --bg:#eef3f9;--panel:#ffffff;--sunk:#f4f7fb;--ink:#14243a;--muted:#5b6b80;--line:#d5deea;
+  --accent:#3470b8;--accent-ink:#ffffff;--accent-soft:#e2ecf8;
+  --ok:#256f40;--ok-bg:#e1f1e6;--warn:#8f5a0c;--warn-bg:#fbeed6;--bad:#ad2219;--bad-bg:#fbe2de;--info:#2a5a86;--info-bg:#e1ebf5;
+  --hm0:#bfe1c6;--hm1:#f3e29a;--hm2:#f1bd85;--hm3:#e99a90;--dock:#1d3a63;--dock-ink:#f2f6fb;
+  --f-ui:'Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic UI','Meiryo','Noto Sans JP',system-ui,sans-serif;
+  --f-num:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1520;--panel:#172131;--sunk:#121b28;--ink:#e3e9f2;--muted:#95a3b6;--line:#2a3648;
+  --accent:#7aaae6;--accent-ink:#0b1a2e;--accent-soft:#1c2d45;
+  --ok:#6ccb8d;--ok-bg:#183424;--warn:#e6b052;--warn-bg:#3a2c12;--bad:#f2786a;--bad-bg:#3e1d19;--info:#86b6e2;--info-bg:#18293a;
+  --hm0:#24563a;--hm1:#6b5d1c;--hm2:#7a4a1f;--hm3:#7c2c25;--dock:#dce6f3;--dock-ink:#0e1520;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1520;--panel:#172131;--sunk:#121b28;--ink:#e3e9f2;--muted:#95a3b6;--line:#2a3648;
+  --accent:#7aaae6;--accent-ink:#0b1a2e;--accent-soft:#1c2d45;
+  --ok:#6ccb8d;--ok-bg:#183424;--warn:#e6b052;--warn-bg:#3a2c12;--bad:#f2786a;--bad-bg:#3e1d19;--info:#86b6e2;--info-bg:#18293a;
+  --hm0:#24563a;--hm1:#6b5d1c;--hm2:#7a4a1f;--hm3:#7c2c25;--dock:#dce6f3;--dock-ink:#0e1520;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 120px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+svg.ic{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:680px;margin-inline:auto}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);display:flex;align-items:center;gap:6px;min-height:56px;border-bottom:1px solid var(--line)}
+.bar h1{font-size:1.05rem;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{width:44px;height:44px;border:0;background:none;border-radius:10px;display:grid;place-items:center;font-size:1.5rem;color:var(--ink);flex:none;margin-left:-8px}
+.icon-btn:active{background:var(--accent-soft)}
+.star{color:var(--muted);font-size:1.3rem;margin-left:0;margin-right:-8px}
+.star.on{color:#d39b12}
+.app-ic{width:36px;height:36px;border-radius:9px;flex:none}
+.sec-row{display:flex;align-items:center;justify-content:space-between}
+.mini-clear{border:0;background:none;color:var(--muted);font-size:.72rem;padding:4px 6px;border-radius:6px;margin:14px -6px 0 0}
+.mini-clear:active{background:var(--accent-soft)}
+.hello{display:flex;align-items:center;gap:10px;padding-block:18px 12px}
+.hello b{font-size:1.15rem;line-height:1.3}
+.hello small{color:var(--muted);font-size:.75rem;margin-left:auto}
+.search{width:100%;height:48px;padding:0 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-size:1rem}
+.sec-t{font-size:.75rem;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:22px 0 8px}
+.quick{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.qchip{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:9px 14px;font-size:.88rem;white-space:nowrap}
+.qchip:active{background:var(--accent-soft)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:14px;text-align:left;min-height:112px;min-width:0}
+.tile:active{background:var(--accent-soft);border-color:var(--accent)}
+.tile .ico{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent)}
+.tile .ico svg.ic{width:26px;height:26px}
+.tile .tn{font-weight:700;font-size:1rem;line-height:1.3}
+.tile .ts{font-size:.75rem;color:var(--muted);line-height:1.4}
+.tile.sm{min-height:96px;padding:12px;gap:6px}
+.tile.sm .ico{width:34px;height:34px;border-radius:10px}
+.tile.sm .ico svg.ic{width:20px;height:20px}
+.tile.sm .tn{font-size:.92rem;font-weight:600;word-break:break-word}
+.sub{font-size:.78rem;color:var(--muted);font-weight:600;letter-spacing:.04em;margin:20px 0 8px;display:flex;align-items:center;gap:6px}
+.sub svg.ic{width:16px;height:16px}
+.foot{font-size:.75rem;color:var(--muted);margin-top:24px;line-height:1.7}
+.desc{color:var(--muted);font-size:.88rem;margin:12px 0 14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.card-h{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:12px}
+.clear-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:6px 12px;font-size:.8rem;letter-spacing:0;color:var(--ink)}
+.clear-btn svg.ic{width:16px;height:16px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld>label,.fld>.lbl{font-size:.8rem;color:var(--muted)}
+.grp{grid-column:1/-1;font-size:.82rem;font-weight:700;color:var(--accent);border-top:1px solid var(--line);padding-top:12px;margin-top:4px;display:flex;align-items:center;gap:8px}
+.grp small{font-weight:400;color:var(--muted);font-size:.75rem}
+.grp:first-child{border-top:0;padding-top:0;margin-top:0}
+.inwrap{display:flex;align-items:center;height:48px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);overflow:hidden}
+.inwrap:focus-within{border-color:var(--accent)}
+.inwrap input{flex:1;min-width:0;height:100%;border:0;background:transparent;padding:0 12px;font-family:var(--f-num);font-size:1.1rem;font-variant-numeric:tabular-nums}
+.inwrap input::placeholder{color:var(--muted);opacity:.45}
+.inwrap input:focus{outline:none}
+.inwrap input::-webkit-outer-spin-button,.inwrap input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inwrap input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.inwrap span{padding-right:12px;font-size:.75rem;color:var(--muted);white-space:nowrap}
+.fld select{height:48px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:0 12px;width:100%;min-width:0;font-size:.95rem}
+.seg{display:flex;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;min-width:0;border:0;background:none;border-radius:8px;min-height:40px;font-size:.88rem;padding:4px 6px;line-height:1.25}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--accent);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.rlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.opt{display:flex;align-items:center;gap:10px;border:0;background:var(--panel);text-align:left;padding:11px 12px;min-height:48px;font-size:.9rem;line-height:1.4}
+.opt+.opt{border-top:1px solid var(--line)}
+.opt .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none}
+.opt[aria-pressed="true"]{background:var(--accent-soft)}
+.opt[aria-pressed="true"] .dot{border-color:var(--accent);background:radial-gradient(var(--accent) 45%,transparent 50%)}
+.opt .box{width:20px;height:20px;border-radius:5px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:.8rem;color:var(--accent-ink)}
+.opt[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent)}
+.opt[aria-pressed="true"] .box::after{content:"✓"}
+.opt .pts{margin-left:auto;font-family:var(--f-num);font-size:.8rem;color:var(--muted);white-space:nowrap;padding-left:8px}
+.opt .stag{margin-left:auto;font-size:.65rem;color:var(--muted);white-space:nowrap;padding-left:8px;text-align:right;line-height:1.3}
+.opt[aria-pressed="true"] .pts{color:var(--accent);font-weight:600}
+.mains{display:flex;flex-direction:column;gap:12px}
+.mn .lab{font-size:.8rem;color:var(--muted)}
+.mn .val{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.mn .num{font-family:var(--f-num);font-size:2rem;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums;word-break:break-word}
+.mn.sm .num{font-size:1.4rem}
+.mn .unit{color:var(--muted);font-size:.85rem}
+.chip{display:inline-block;font-size:.75rem;font-weight:600;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.lv-ok{background:var(--ok-bg);color:var(--ok)}.lv-warn{background:var(--warn-bg);color:var(--warn)}.lv-bad{background:var(--bad-bg);color:var(--bad)}.lv-info{background:var(--info-bg);color:var(--info)}
+.rows{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:12px}
+.rows td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}
+.rows td:nth-child(2){text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;padding-left:10px}
+.rows td:nth-child(3){color:var(--muted);font-size:.75rem;padding-left:6px;white-space:nowrap;width:1%}
+.msg{margin-top:12px;font-size:.88rem;line-height:1.7;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.msg ul{margin:4px 0;padding-left:1.2em}
+.empty{color:var(--muted);font-size:.9rem;margin:0}
+details.more{border-top:1px solid var(--line);margin-top:12px}
+details.more summary{cursor:pointer;font-size:.85rem;color:var(--muted);padding:12px 0;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"＋"}
+details.more[open] summary::after{content:"－"}
+.formula{font-family:var(--f-num);font-size:.8rem;line-height:1.8;white-space:pre-wrap;padding-bottom:12px}
+.expl{font-size:.85rem;line-height:1.7;padding-bottom:12px}
+.expl p{margin:0 0 8px}
+.expl ul{margin:0 0 8px;padding-left:1.2em}
+.note{font-size:.78rem;color:var(--muted);margin:0 0 12px}
+.tbl-wrap{overflow-x:auto;margin-bottom:12px}
+.info-tbl{border-collapse:collapse;width:100%;font-size:.84rem;min-width:420px}
+.info-tbl th,.info-tbl td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+.info-tbl th{background:var(--sunk);font-weight:600;font-size:.78rem}
+.hm{border-collapse:separate;border-spacing:3px;font-size:.78rem;margin-top:12px;font-family:var(--f-num)}
+.hm td,.hm th{width:52px;height:28px;text-align:center;border-radius:4px}
+.hm th{color:var(--muted);font-weight:500}
+.hm .r0{background:var(--hm0)}.hm .r1{background:var(--hm1)}.hm .r2{background:var(--hm2)}.hm .r3{background:var(--hm3)}
+.hm .here{outline:3px solid var(--ink);outline-offset:-3px;font-weight:700}
+.mix-row{display:grid;grid-template-columns:minmax(0,1fr) 112px 44px;gap:8px;margin-bottom:8px}
+.mix-row select{height:48px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);padding:0 8px;min-width:0;font-size:.9rem}
+.mix-row .del,.add{border:1px solid var(--line);background:var(--sunk);border-radius:10px;height:48px}
+.add{width:100%;font-size:.9rem}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--dock);color:var(--dock-ink);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));border:0;width:100%;text-align:left;box-shadow:0 -4px 16px rgba(0,0,0,.15)}
+.dock-in{max-width:680px;margin-inline:auto;display:flex;align-items:center;gap:12px;width:100%}
+.dock .dl{font-size:.72rem;opacity:.75;display:block}
+.dock .dv{font-family:var(--f-num);font-size:1.3rem;font-weight:600;line-height:1.2}
+.dock .du{font-size:.75rem;opacity:.75;margin-left:4px}
+.dock .chip{margin-left:auto}
+@media (min-width:720px){.mn .num{font-size:2.3rem}.tiles.cats{grid-template-columns:1fr 1fr 1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+<button class="dock" id="dock" type="button" hidden aria-label="結果へ移動"><span class="dock-in" id="dock-in"></span></button>
+
+<script>
+const IC={
+ kidney:'<path d="M9 3C5.5 3 4 6.5 4 10.5S6 20 9 20c1.8 0 2.5-1.6 2.5-3.2 0-1.6-1.2-2.3-1.2-3.8s1.2-2.2 1.2-3.8C11.5 5.6 10.8 3 9 3z"/><path d="M15 3c3.5 0 5 3.5 5 7.5S18 20 15 20c-1.8 0-2.5-1.6-2.5-3.2 0-1.6 1.2-2.3 1.2-3.8s-1.2-2.2-1.2-3.8C12.5 5.6 13.2 3 15 3z"/>',
+ flask:'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/>',
+ ph:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 15V9h2a1.5 1.5 0 0 1 0 3H8M13.5 9v6M16.5 9v6M13.5 12h3"/>',
+ alert:'<path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/>',
+ calc:'<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h1M12 11.5h0M15.5 11.5h0M8.5 15h1M12 15h0M15.5 15h0M8.5 18h1M12 18h0M15.5 18h0"/>',
+ gauge:'<path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l3.5-5"/><path d="M4 17h16"/>',
+ drop:'<path d="M12 3s6 7 6 11.2A6 6 0 0 1 6 14.2C6 10 12 3 12 3z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/>',
+ heart:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/>',
+ pulse:'<path d="M2.5 12h4.5l2-5 4 10 2.2-5H21.5"/>',
+ thermo:'<path d="M14 14.5V5a2 2 0 0 0-4 0v9.5a4 4 0 1 0 4 0z"/><path d="M12 11v6"/>',
+ person:'<circle cx="12" cy="7" r="3.5"/><path d="M5 21c0-4 3.1-7 7-7s7 3 7 7"/>',
+ shield:'<path d="M12 3 5 6v5.5c0 4.6 3 7.8 7 9.5 4-1.7 7-4.9 7-9.5V6l-7-3z"/><path d="M9 12l2 2 4-4"/>',
+ liver:'<path d="M3 9.5C3 6.5 6 5 10 5h7.5C20 5 21 7 21 9c0 4.5-4.5 9-9.5 10-2 .4-3-1-3-2.8C5.5 16 3 13.2 3 9.5z"/>',
+ syringe:'<path d="M18 3l3 3M16.5 4.5l3 3M18 6 8 16l-3.5 1 1-3.5 10-10"/><path d="M11 9l1.5 1.5M8.5 11.5 10 13M5.5 18.5 3 21"/>',
+ pill:'<path d="M10.5 4.5a4.95 4.95 0 0 1 7 7l-6 6a4.95 4.95 0 0 1-7-7l6-6z"/><path d="M7.5 7.5l9 9"/>',
+ ivbag:'<path d="M8 3h8v11a4 4 0 0 1-8 0V3z"/><path d="M8 8h8M12 18v3.5"/>',
+ clip:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M9 12.5l2 2 4-4"/>',
+ clear:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'};
+const icon=k=>'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+IC[k]+'</svg>';
+const $=s=>document.querySelector(s);
+const S={};
+const num=v=>{if(v===''||v===null||v===undefined)return NaN;const x=parseFloat(v);return isFinite(x)?x:NaN};
+const f=(x,d=1)=>isFinite(x)?Number(x).toFixed(d):'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ul=a=>'<ul>'+a.map(x=>'<li>'+x+'</li>').join('')+'</ul>';
+const tbl=(h,rows)=>'<div class="tbl-wrap"><table class="info-tbl"><tr>'+h.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+rows.map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</table></div>';
+function N(id,label,unit,ex,o={}){return{t:'n',id,label,unit,ex,...o}}
+function SEL(id,label,opts,def,o={}){return{t:'s',id,label,opts,def:def??(typeof opts==='function'?undefined:opts[0][0]),...o}}
+function SS(id,label,opts,def){return SEL(id,label,opts,def,{score:true})}
+function CK(id,label,pts,o={}){return{t:'c',id,label,pts,...o}}
+const H=(label,small)=>({t:'h',label,small});
+const SEX=SEL('sex','性別',[['M','男性'],['F','女性']]), AGE=N('age','年齢','歳',72), WT=N('wt','体重','kg',58), HT=N('ht','身長','cm',162);
+const CR=N('cr','血清Cr','mg/dL',1.2), ALB=N('alb','Alb','g/dL',3.2), NA_=N('na','Na','mEq/L',136), CL=N('cl','Cl','mEq/L',102);
+const GLU=N('glu','血糖','mg/dL',110), BUN=N('bun','BUN','mg/dL',20), UCR=N('u_cr','尿Cr','mg/dL',90);
+const gcat=e=>e>=90?'G1':e>=60?'G2':e>=45?'G3a':e>=30?'G3b':e>=15?'G4':'G5';
+const glv=g=>g==='G1'||g==='G2'?'ok':g.startsWith('G3')?'warn':'bad';
+const cg=(age,wt,cr,sex)=>(140-age)*wt/(72*cr)*(sex==='F'?.85:1);
+const bsaDu=(w,h)=>0.007184*Math.pow(w,.425)*Math.pow(h,.725);
+const egcr=(cr,age,sex)=>194*Math.pow(cr,-1.094)*Math.pow(age,-0.287)*(sex==='F'?.739:1);
+const egcys=(cys,age,sex)=>(104*Math.pow(cys,-1.019)*Math.pow(.996,age)*(sex==='F'?.929:1))-8;
+function sumScore(def,v){let s=0;for(const i of def.inputs){if(i.t==='c'&&v[i.id])s+=i.pts;else if(i.t==='s'&&i.score)s+=parseFloat(v[i.id])||0}return s}
+function SC(o){return{...o,isScore:true,compute(v,def){const s=sumScore(def,v);const r=o.interp(s,v);return{main:[o.total||'合計',f(s,s%1?1:0),'点',r.lv,r.tag],rows:r.rows,msg:r.msg}}}}
+const FORM=s=>'<div class="formula">'+s+'</div>', EXPL=a=>'<div class="expl">'+ul(a)+'</div>';
+
+const CALC={};
+// ① 腎機能
+CALC.egfr={name:'Ccr・eGFR',sub:'腎機能の推算（CG・cr・cys）',desc:'CG式Ccrを中心に、eGFRcr・eGFRcys・eGFRcr-cys・BSA・個別eGFRを一度に算出。シスタチンCは任意。',
+ inputs:[AGE,SEX,WT,HT,CR,N('cys','シスタチンC（任意）','mg/L',1.3,{opt:true})],
+ compute(v){const c=cg(v.age,v.wt,v.cr,v.sex),a=egcr(v.cr,v.age,v.sex),g=gcat(a),b=bsaDu(v.wt,v.ht);
+ const mains=[['CG式 Ccr',f(c,1),'mL/min',c>=50?'ok':c>=30?'warn':'bad','Ccr '+(c>=50?'≥50':c>=30?'30–49':c>=15?'15–29':'<15')],['eGFRcr',f(a,1),'mL/min/1.73m²',glv(g),'CKD '+g]];
+ const rows=[['BSA（DuBois）',f(b,2),'m²'],['個別eGFR（BSA補正なし）',f(a*b/1.73,1),'mL/min']];let msg='';
+ if(isFinite(v.cys)){const y=egcys(v.cys,v.age,v.sex),m=(a+y)/2,gap=Math.abs(a-y)/m*100;
+  mains.push(['eGFRcr-cys（平均）',f(m,1),'mL/min/1.73m²',glv(gcat(m)),'CKD '+gcat(m)]);rows.unshift(['eGFRcys',f(y,1),'mL/min/1.73m²'],['cr と cys の差（平均比）',f(gap,0),'%',gap>=30?'warn':'ok']);
+  if(gap>=30)msg=a>y?'<b>乖離あり：eGFRcr ＞ eGFRcys</b>'+ul(['筋肉量の減少（高齢・臥床・サルコペニア・低栄養・四肢切断・肝硬変）で eGFRcr が過大評価','またはステロイド・甲状腺機能亢進・炎症・肥満・喫煙で eGFRcys が過小評価'])+'まず筋肉量を確認し、該当すれば eGFRcys または eGFRcr-cys を採用。':'<b>乖離あり：eGFRcr ＜ eGFRcys</b>'+ul(['筋肉量が多い、肉の大量摂取・クレアチン製剤で eGFRcr が過小評価','甲状腺機能低下症で eGFRcys が過大評価'])+'原因に応じて採用する値を選ぶ。迷うときは eGFRcr-cys。';
+  else msg='cr と cys の差は30%未満。どちらの値も概ね妥当。'}
+ return{main:mains,rows,msg}},
+ sections:[['指標の使い分け・乖離の評価',tbl(['指標','主な用途','注意点'],[['CG式 Ccr','添付文書の用量基準（DOACなど）','真のGFRより高めに出やすい'],['eGFRcr','CKDの診断・G分類','筋肉量が少ないと過大評価'],['eGFRcys','筋肉量が極端な症例','甲状腺機能・ステロイド・炎症で変動'],['eGFRcr-cys','最も精度が高い推算','乖離があるときの判断に'],['個別eGFR','体格が標準から外れる症例の投与設計','mL/min で使う']])+
+  '<div class="expl"><p><b>乖離の評価</b>：eGFRcr と eGFRcys の差が平均値の30%以上（または eGFRcys/eGFRcr 比が 0.7 未満か 1.3 超）を「乖離あり」の目安とする（厳密な公式基準ではない）。</p></div>'+
+  tbl(['パターン','主な原因','採用する値'],[['eGFRcr ＞ eGFRcys','筋肉量の減少（高齢・臥床・サルコペニア・低栄養・四肢切断・肝硬変）','eGFRcys / eGFRcr-cys'],['eGFRcr ＜ eGFRcys','筋肉量が多い、肉の大量摂取・クレアチン製剤、甲状腺機能低下症','eGFRcys / eGFRcr-cys'],['eGFRcys だけ低い','ステロイド、甲状腺機能亢進症、炎症、肥満、喫煙（Cysが上昇）','eGFRcr / eGFRcr-cys']])],
+  ['計算式',FORM('CG式 Ccr = (140−年齢) × 体重 / (72 × Cr)（女性 ×0.85）\neGFRcr = 194 × Cr^−1.094 × 年齢^−0.287（女性 ×0.739）\neGFRcys = 104 × Cys^−1.019 × 0.996^年齢（女性 ×0.929）− 8\neGFRcr-cys = 平均\nBSA(DuBois) = 0.007184 × 体重^0.425 × 身長^0.725\n個別eGFR = eGFR × BSA / 1.73')]]};
+const acat=(t,x)=>t==='uacr'?(x<30?'A1':x<300?'A2':'A3'):(x<0.15?'A1':x<0.5?'A2':'A3');
+const HM=[[0,1,2],[0,1,2],[1,2,3],[2,3,3],[3,3,3],[3,3,3]],GS=['G1','G2','G3a','G3b','G4','G5'];
+CALC.ckd={name:'CKD重症度分類',sub:'G×A分類・ヒートマップ',desc:'eGFRと尿所見からG分類・A分類・ヒートマップを表示。',
+ inputs:[N('egfr','eGFR','mL/min/1.73m²',45),SEL('protype','尿所見',[['uacr','尿アルブミン'],['upcr','尿蛋白']]),SEL('proin','入力方法',[['raw','定量値＋尿Cr'],['ratio','比を直接']]),
+  N('u_alb','尿アルブミン','mg/L',80,{show:v=>v.protype==='uacr'&&v.proin==='raw'}),N('u_prot','尿蛋白','mg/dL',45,{show:v=>v.protype==='upcr'&&v.proin==='raw'}),{...UCR,show:v=>v.proin==='raw'},
+  N('uacr_d','UACR','mg/gCr',120,{show:v=>v.protype==='uacr'&&v.proin==='ratio'}),N('upcr_d','UPCR','g/gCr',0.4,{show:v=>v.protype==='upcr'&&v.proin==='ratio'})],
+ compute(v){const t=v.protype;const x=v.proin==='ratio'?(t==='uacr'?v.uacr_d:v.upcr_d):(t==='uacr'?v.u_alb*100/v.u_cr:v.u_prot/v.u_cr);const g=gcat(v.egfr),a=acat(t,x),gi=GS.indexOf(g),ai=+a[1]-1,r=HM[gi][ai];
+ let h='<table class="hm"><tr><th></th><th>A1</th><th>A2</th><th>A3</th></tr>';GS.forEach((G,i)=>{h+='<tr><th>'+G+'</th>'+HM[i].map((q,j)=>'<td class="r'+q+(i===gi&&j===ai?' here':'')+'">'+(i===gi&&j===ai?'●':'')+'</td>').join('')+'</tr>'});h+='</table>';
+ return{main:['重症度区分',g+a,'',['ok','warn','warn','bad'][r],['低リスク','中等度リスク','高度リスク','超高度リスク'][r]],rows:[[t==='uacr'?'UACR':'UPCR',f(x,t==='uacr'?0:2),t==='uacr'?'mg/gCr':'g/gCr']],extra:h}},
+ sections:[['判定基準',FORM('UACR = 尿Alb (mg/L) × 100 / 尿Cr (mg/dL)\nUPCR = 尿蛋白 (mg/dL) / 尿Cr (mg/dL)\nG: ≥90 / 60–89 / 45–59 / 30–44 / 15–29 / <15\nA（UACR）: <30 / 30–299 / ≥300 mg/gCr\nA（UPCR）: <0.15 / 0.15–0.49 / ≥0.50 g/gCr\n※糖尿病はUACR、それ以外はUPCRで区分')]]};
+CALC.mbd={name:'CKD-MBD評価',sub:'Ca・P・PTHの管理目標',desc:'補正Ca・P・intact PTHを管理目標と照合。',inputs:[SEL('hd','対象',[['hd','透析'],['ckd','保存期']]),N('ca','血清Ca','mg/dL',8.6),ALB,N('p','血清P','mg/dL',5.8),N('pth','intact PTH','pg/mL',280)],
+ compute(v){const cc=v.alb<4?v.ca+(4-v.alb):v.ca;const T=v.hd==='hd'?{p:[3.5,6.0],c:[8.4,10.0],h:[60,240]}:{p:[2.5,4.5],c:[8.4,10.0],h:[10,65]};const j=(x,r)=>x<r[0]?'warn':x>r[1]?'bad':'ok';
+ const L=[j(v.p,T.p),j(cc,T.c),j(v.pth,T.h)],out=L.filter(x=>x!=='ok').length;return{main:['目標外',String(out),'項目',out?'warn':'ok',out?'見直し対象あり':'すべて目標内'],rows:[['P（'+T.p.join('–')+'）',f(v.p,1),'mg/dL',L[0]],['補正Ca（'+T.c.join('–')+'）',f(cc,1),'mg/dL',L[1]],['intact PTH（'+T.h.join('–')+'）',f(v.pth,0),'pg/mL',L[2]]],msg:v.hd==='hd'?'透析患者の目標はJSDTガイドライン（2012）。優先順位は P → Ca → PTH。':'保存期は基準値内を目標とした簡易判定。'}}};
+CALC.aki={name:'AKI評価',sub:'KDIGOステージ（Cr・尿量）',desc:'血清Cr基準と尿量基準のステージを同時に判定。BUN/Cr比も確認。',
+ inputs:[CR,N('crb','基礎Cr','mg/dL',0.8),WT,N('uvol','尿量（任意）','mL',180,{opt:true}),N('uhr','測定時間（任意）','時間',8,{opt:true}),N('bun','BUN（任意）','mg/dL',38,{opt:true}),CK('rrt','腎代替療法を開始した',0),CK('anuria','12時間以上の無尿',0)],
+ compute(v){const r=v.cr/v.crb,d=v.cr-v.crb;let sc=0;if(v.rrt||r>=3||(v.cr>=4&&d>=0.3))sc=3;else if(r>=2)sc=2;else if(r>=1.5||d>=0.3)sc=1;
+ let su=0,uo=NaN;if(isFinite(v.uvol)&&isFinite(v.uhr)){uo=v.uvol/v.wt/v.uhr;if(uo<0.3&&v.uhr>=24)su=3;else if(uo<0.5&&v.uhr>=12)su=2;else if(uo<0.5&&v.uhr>=6)su=1}if(v.anuria)su=3;
+ const s=Math.max(sc,su);const rows=[['Cr基準',sc?'Stage '+sc:'該当なし','',sc?'warn':'ok'],['基礎値比 / 上昇幅',f(r,2)+' 倍 / +'+f(d,2),'mg/dL']];
+ if(isFinite(uo))rows.push(['尿量',f(uo,2),'mL/kg/hr',uo<0.5?'warn':'ok'],['尿量基準',su?'Stage '+su:'該当なし','',su?'warn':'ok']);if(isFinite(v.bun)){const bc=v.bun/v.cr;rows.push(['BUN/Cr比',f(bc,1),'',bc>20?'warn':'ok'])}
+ return{main:['AKIステージ',s?'Stage '+s:'該当なし','',s===0?'ok':s===1?'warn':'bad',s?'KDIGO':'基準未満'],rows,msg:'Cr基準 Stage 1 は「48時間以内に +0.3 mg/dL」または「7日以内に1.5倍」。BUN/Cr >20 は腎前性・消化管出血・異化亢進を考慮。'}},
+ sections:[['判定基準',FORM('Cr: Stage1 1.5–1.9倍 or +0.3 / Stage2 2.0–2.9倍 / Stage3 3.0倍以上・Cr≥4.0・RRT\n尿量: Stage1 <0.5 mL/kg/hr 6–12h / Stage2 <0.5 12h以上 / Stage3 <0.3 24h以上・無尿12h以上')]]};
+const FEX=[['FENa','Na','u_na','na','mEq/L',40,136,x=>x<1?['info','<1% 腎前性','腎前性パターン。利尿薬使用中はFEUNを優先。']:x>2?['warn','>2% 腎性','急性尿細管壊死などの腎性AKIを示唆。']:['info','1–2% 境界','境界域。']],
+ ['FEUN','UN','u_un','bun','mg/dL',450,40,x=>x<35?['info','<35% 腎前性','腎前性パターン（利尿薬投与下でも使える）。']:x>50?['warn','>50% 腎性','腎性パターン。']:['info','35–50% 境界','境界域。']],
+ ['FEUA','UA','u_ua','ua','mg/dL',40,3.0,x=>x>12?['warn','>12%','低Na血症でSIADH・塩類喪失を示唆。']:x<8?['info','<8%','低Na血症で体液量減少を示唆。']:['info','8–12%','中間。']],
+ ['FEK','K','u_k','k','mEq/L',30,3.0,x=>['info','参考','正常は概ね10%前後。低K血症の判定は尿K/尿Cr比も併用。']],
+ ['FEPO4','P','u_p','p','mg/dL',30,1.6,x=>x>5?['warn','>5% 腎性喪失','低P血症で腎性喪失（副甲状腺機能亢進、Fanconi、FGF23関連）。']:['info','≤5%','低P血症で腎外性（細胞内移行・摂取不足）。']]];
+CALC.fe={name:'排泄分画（FE）',sub:'FENa・FEUN・FEUA・FEK・FEPO4',desc:'尿Crと血清Crは共通。各物質の尿値・血清値は使うものだけ入力すれば、まとめて表示。',
+ inputs:[UCR,CR,...FEX.flatMap(x=>[H(x[0]),N(x[2],'尿'+x[1],x[4],x[5],{opt:true}),N(x[3],'血清'+x[1],x[4],x[6],{opt:true})])],
+ compute(v){const rows=[],m=[];let main=null;FEX.forEach(x=>{const u=v[x[2]],p=v[x[3]];if(!isFinite(u)||!isFinite(p))return;const fe=(u*v.cr)/(p*v.u_cr)*100,r=x[7](fe),s=f(fe,fe<1?2:1);rows.push([x[0],s+'%','',r[0]==='info'?undefined:r[0]]);m.push('<b>'+x[0]+' '+s+'%</b>：'+r[2]);if(!main)main=[x[0],s,'%',r[0],r[1]]});
+ if(!main)return{main:['入力待ち','—','','info','尿値と血清値を1組以上'],msg:'計算したい物質の尿値と血清値を入力してください。'};return{main,rows:rows.length>1?rows:[],msg:ul(m)}},
+ sections:[['各指標の使いどころ',tbl(['指標','使う場面','目安'],[['FENa','AKIの腎前性／腎性の鑑別','<1% 腎前性、>2% 腎性'],['FEUN','利尿薬使用中のAKI鑑別','<35% 腎前性、>50% 腎性'],['FEUA','低Na血症（SIADHと体液量減少）','>12% SIADH、<8% 体液量減少'],['FEK','低K・高K血症での腎のK排泄','正常 約10%'],['FEPO4','低P血症の腎性喪失','>5% 腎性喪失']])],['計算式',FORM('FEx = (尿x × 血清Cr) / (血清x × 尿Cr) × 100')]]};
+CALC.urine={name:'尿Na・尿Cl・尿浸透圧',sub:'尿検査の解釈',desc:'入力した項目だけを、場面に合わせて解釈。',inputs:[SEL('uctx','場面',[['aki','AKI'],['hypo','低Na'],['hyper','高Na・多尿'],['alk','アルカローシス']],undefined,{full:true}),N('u_na','尿Na','mEq/L',18,{opt:true}),N('u_cl','尿Cl','mEq/L',12,{opt:true}),N('uosm','尿浸透圧','mOsm/kg',420,{opt:true})],
+ compute(v){const rows=[],m=[];if(isFinite(v.u_na)){rows.push(['尿Na',f(v.u_na,0),'mEq/L']);m.push('尿Na：'+(v.uctx==='hypo'?(v.u_na<=30?'≤30 有効循環血漿量の減少':'>30 SIADH・利尿薬・副腎不全など'):(v.u_na<20?'<20 腎前性パターン':v.u_na>40?'>40 腎性パターン':'20–40 境界')))}
+ if(isFinite(v.u_cl)){rows.push(['尿Cl',f(v.u_cl,0),'mEq/L']);m.push(v.u_cl<20?'尿Cl <20：Cl反応性（嘔吐・胃液吸引・利尿薬使用後）':'尿Cl ≥20：Cl抵抗性（鉱質コルチコイド過剰、利尿薬使用中、Bartter/Gitelman）')}
+ if(isFinite(v.uosm)){rows.push(['尿浸透圧',f(v.uosm,0),'mOsm/kg']);m.push(v.uctx==='hyper'?(v.uosm>600?'尿浸透圧 >600：濃縮能保持（腎外喪失・摂取不足）':v.uosm<300?'尿浸透圧 <300：尿崩症を考慮':'尿浸透圧 300–600：浸透圧利尿・部分型尿崩症'):(v.uosm<=100?'尿浸透圧 ≤100：ADH抑制（多飲・低溶質摂取）':'尿浸透圧 >100：ADH作用あり'))}
+ if(!rows.length)return{main:['入力待ち','—','','info','項目を入力'],msg:'尿Na・尿Cl・尿浸透圧のいずれかを入力。'};return{main:['解釈した項目',String(rows.length),'項目','info','下の解釈を参照'],rows,msg:ul(m)+'利尿薬使用中は尿Na・尿Clが高値になりやすい。'}}};
+CALC.osm={name:'浸透圧・浸透圧ギャップ',sub:'計算浸透圧・有効浸透圧',desc:'計算血清浸透圧と有効浸透圧。実測値を入れると浸透圧ギャップも算出。',inputs:[NA_,GLU,BUN,N('mosm','実測浸透圧（任意）','mOsm/kg',310,{opt:true}),N('etoh','エタノール（任意）','mg/dL',undefined,{opt:true})],
+ compute(v){const c=2*v.na+v.glu/18+v.bun/2.8,e=2*v.na+v.glu/18,ce=c+(isFinite(v.etoh)?v.etoh/3.7:0);const rows=[['有効浸透圧（tonicity）',f(e,0),'mOsm/kg',e<275||e>295?'warn':'ok']];let msg='';
+ if(isFinite(v.mosm)){const g=v.mosm-ce;rows.push(['浸透圧ギャップ',f(g,0),'mOsm/kg',g>10?'warn':'ok']);if(g>10)msg='ギャップ >10：メタノール、エチレングリコール、イソプロパノール、マンニトール、高度の高脂血症・高蛋白血症などを考慮。'}
+ return{main:['計算血清浸透圧',f(c,0),'mOsm/kg',c<275||c>295?'warn':'ok',c<275?'低浸透圧':c>295?'高浸透圧':'275–295'],rows,msg}},sections:[['計算式',FORM('計算浸透圧 = 2×Na + 血糖/18 + BUN/2.8\n有効浸透圧 = 2×Na + 血糖/18\nギャップ = 実測 − 計算（+ EtOH/3.7）')]]};
+CALC.cfw={name:'自由水・浸透圧クリアランス',sub:'尿による水・溶質の排泄',desc:'尿による自由水と溶質の排泄を評価。',inputs:[N('uvolday','尿量','L/日',2.0),N('uosm','尿浸透圧','mOsm/kg',200),N('posm','血漿浸透圧','mOsm/kg',285),N('u_na','尿Na（任意）','mEq/L',undefined,{opt:true}),N('u_k','尿K（任意）','mEq/L',undefined,{opt:true}),N('na','血清Na（任意）','mEq/L',undefined,{opt:true})],
+ compute(v){const c=v.uvolday*(1-v.uosm/v.posm),co=v.uosm*v.uvolday/v.posm,s=v.uosm*v.uvolday;const rows=[['浸透圧クリアランス',f(co,2),'L/日'],['1日溶質排泄量',f(s,0),'mOsm/日',s>1000?'warn':'ok']];
+ if([v.u_na,v.u_k,v.na].every(isFinite))rows.unshift(['電解質自由水クリアランス',f(v.uvolday*(1-(v.u_na+v.u_k)/v.na),2),'L/日']);
+ return{main:['自由水クリアランス',f(c,2),'L/日','info',c>0?'自由水を排泄':'自由水を保持'],rows,msg:'Na値の変化予測には電解質自由水クリアランスが実用的。'+(s>1000?' 溶質排泄 >1000 mOsm/日は浸透圧利尿を示唆。':'')}},sections:[['計算式',FORM('CH₂O = V × (1 − Uosm/Posm)\nEFWC = V × (1 − (UNa+UK)/PNa)\nCosm = Uosm × V / Posm')]]};
+
+// ② 電解質・血液ガス
+CALC.nacorr={name:'高血糖時の補正Na',sub:'高血糖での見かけの低Na',desc:'高血糖による希釈性低Naを補正。',inputs:[NA_,N('glu','血糖','mg/dL',580)],
+ compute(v){const k=v.na+1.6*(v.glu-100)/100,h=v.na+2.4*(v.glu-100)/100;return{main:['補正Na（Katz）',f(k,1),'mEq/L',k>145||k<135?'warn':'ok',k>145?'高Na':k<135?'低Na':'基準内'],rows:[['補正Na（Hillier）',f(h,1),'mEq/L']]}},sections:[['計算式',FORM('Katz: Na + 1.6 × (血糖 − 100)/100\nHillier: Na + 2.4 × (血糖 − 100)/100')]]};
+CALC.fwd={name:'自由水欠乏量・Na変化予測',sub:'高Na・低Na血症の輸液計画',desc:'高Na血症の自由水欠乏量と、輸液1 LあたりのNa変化予測。',inputs:[N('na','Na','mEq/L',156),WT,SEL('tbw','体液量係数',[['0.6','0.6 成人男性'],['0.5','0.5 成人女性・高齢男性'],['0.45','0.45 高齢女性']],undefined,{full:true}),SEL('infna','投与輸液',[['0','5%ブドウ糖（Na 0）'],['35','3号液（Na 35）'],['77','0.45%食塩液（Na 77）'],['130','乳酸リンゲル（Na 130）'],['154','生理食塩液（Na 154）'],['513','3%食塩液（Na 513）']],undefined,{full:true})],
+ compute(v){const tbw=v.wt*parseFloat(v.tbw),d=tbw*(v.na/140-1),dn=(parseFloat(v.infna)-v.na)/(tbw+1);
+ return{main:[['輸液1 Lあたり',(dn>0?'+':'')+f(dn,1),'mEq/L','info','Na変化予測'],['自由水欠乏量',v.na>140?f(d,1):'—','L',v.na>140?'warn':'info',v.na>140?'高Na血症':'Na ≤140 は対象外']],rows:[['体液量（TBW）',f(tbw,1),'L'],['10 mEq/L 補正に必要な量',f(Math.abs(10/dn),1),'L']],msg:'補正速度は概ね 10 mEq/L/24時間 以内（浸透圧性脱髄の高リスク例は 8 以内）。不感蒸泄・尿の喪失は別途考慮。'}},
+ sections:[['計算式',FORM('欠乏量 = TBW × (Na/140 − 1)\nΔNa(1 L) = (輸液Na − 血清Na) / (TBW + 1)　[Adrogué–Madias]')]]};
+CALC.ca={name:'補正Ca・Ca×P積',sub:'低Alb時のCa補正',desc:'低Alb時の補正Ca。Pを入れるとCa×P積も表示。',inputs:[N('ca','血清Ca','mg/dL',7.8),ALB,N('p','血清P（任意）','mg/dL',6.0,{opt:true})],
+ compute(v){const c=v.alb<4?v.ca+(4-v.alb):v.ca;const rows=[];if(isFinite(v.p)){const x=c*v.p;rows.push(['Ca×P積（補正Ca）',f(x,0),'mg²/dL²',x>=70?'bad':x>=55?'warn':'ok'])}
+ return{main:['補正Ca',f(c,1),'mg/dL',c<8.4?'warn':c>10.4?'bad':'ok',c<8.4?'低Ca':c>10.4?'高Ca':'基準内'],rows,msg:(v.alb>=4?'Alb ≥4.0 のため補正なし。':'正確な評価にはイオン化Caを測定。')+(rows.length?' Ca×P積は透析患者で55未満が目安。':'')}},sections:[['計算式',FORM('補正Ca = Ca + (4 − Alb)（Alb < 4.0）')]]};
+CALC.kdef={name:'K欠乏量の推定',sub:'低K血症の補充量の目安',desc:'体内K欠乏量のおおまかな目安。',inputs:[N('k','血清K','mEq/L',2.9),WT],
+ compute(v){const d=Math.max(0,4-v.k),lo=d*200*v.wt/70,hi=d*400*v.wt/70;return{main:['推定欠乏量',f(lo,0)+'–'+f(hi,0),'mEq',v.k<2.5?'bad':v.k<3.5?'warn':'ok',v.k<2.5?'高度':v.k<3.0?'中等度':v.k<3.5?'軽度':'欠乏なし'],msg:'血清K 1 mEq/L 低下 ≒ 体内K 200–400 mEq 欠乏（70 kg換算）。細胞内移行が原因なら当てはまらない。低Mg血症の合併は先に補正。'}}};
+CALC.mgref={name:'Mg評価・補充量',sub:'低Mg血症の補充の目安',desc:'血清Mgの重症度と補充量の目安。',inputs:[N('mg','血清Mg','mg/dL',1.3),SEL('rf','腎機能',[['n','保たれている'],['l','低下（Ccr<30）']]),CK('mgsym','症状あり（テタニー・痙攣・不整脈・TdP）',0)],
+ compute(v){const x=v.mg;const r=v.mgsym?'硫酸Mg 1–2 g（8–16 mEq）を15分程度で静注、その後持続投与を検討。':x<1.0?'硫酸Mg 4–8 g/日（32–64 mEq/日）を分割して緩徐に静注。':x<1.8?'経口補充、または硫酸Mg 1–2 g を数時間かけて静注。':'補充不要。';
+ return{main:['血清Mg',f(x,1),'mg/dL',x<1.0?'bad':x<1.8||x>2.6?'warn':'ok',x<1.0?'高度低Mg':x<1.8?'低Mg':x>2.6?'高Mg':'基準内'],msg:'参考：'+r+(v.rf==='l'?' 腎機能低下時は50%程度に減量し頻回に測定。':'')+'<br>硫酸Mg 1 g = 4.06 mmol = 8.1 mEq'}}};
+CALC.pref={name:'P評価・補充量',sub:'低P血症の補充の目安',desc:'血清Pの重症度と静注補充量の目安。',inputs:[N('p','血清P','mg/dL',1.4),WT,SEL('rf','腎機能',[['n','保たれている'],['l','低下（Ccr<30）']])],
+ compute(v){const x=v.p;let lo,hi,t;if(x<1.0){lo=.32;hi=.64;t='高度'}else if(x<2.0){lo=.16;hi=.32;t='中等度'}else if(x<2.5){lo=.08;hi=.16;t='軽度'}else{lo=hi=0;t='基準内'}
+ return{main:['補充量の目安',hi?f(lo*v.wt,0)+'–'+f(hi*v.wt,0):'—','mmol',x<1.0?'bad':x<2.5?'warn':'ok',t],rows:hi?[['体重あたり',lo+'–'+hi,'mmol/kg'],['P元素量',f(lo*v.wt*30.97,0)+'–'+f(hi*v.wt*30.97,0),'mg']]:[],msg:'4–6時間以上かけて投与し、P・Ca・Kを再検。'+(v.rf==='l'?' 腎機能低下時は下限量から。':'')+' 製剤のNa・K含有量に注意。'}}};
+CALC.bga={name:'血液ガス・酸塩基評価',sub:'一次性障害・代償・AG・Δratio',desc:'1ページで一次性障害 → 代償 → AG → Δratio まで評価。Na・Cl・HCO₃⁻だけ入れればAGのみ表示。',
+ inputs:[H('血液ガス','pH・PaCO₂は任意'),N('ph','pH','',7.28,{opt:true,step:.01}),N('pco2','PaCO₂','mmHg',26,{opt:true}),N('hco3','HCO₃⁻','mEq/L',12),H('電解質','AGの計算に使用'),N('na','Na','mEq/L',138,{opt:true}),N('cl','Cl','mEq/L',104,{opt:true}),N('alb','Alb','g/dL',3.2,{opt:true})],
+ compute(v){const{ph,pco2,hco3}=v,mains=[],rows=[],dx=[];const gas=isFinite(ph)&&isFinite(pco2);let prim='';
+ if(gas){if(ph<7.35)prim=hco3<22&&pco2>45?'代謝性＋呼吸性アシドーシス':hco3<22?'代謝性アシドーシス':pco2>45?'呼吸性アシドーシス':'判定困難';else if(ph>7.45)prim=hco3>26&&pco2<35?'代謝性＋呼吸性アルカローシス':hco3>26?'代謝性アルカローシス':pco2<35?'呼吸性アルカローシス':'判定困難';else prim=(hco3<22||hco3>26||pco2<35||pco2>45)?'混合性障害の可能性':'酸塩基障害なし';
+  mains.push([ph<7.35?'アシデミア':ph>7.45?'アルカレミア':'pH正常域',prim,'',/なし/.test(prim)?'ok':'warn','一次性障害']);dx.push('一次性障害：'+prim);
+  const ck=(e,x,hi,lo)=>x>e+2?hi:x<e-2?lo:'代償は適切';
+  if(prim==='代謝性アシドーシス'){const e=1.5*hco3+8;rows.push(['予測PaCO₂（Winter）',f(e-2,0)+'–'+f(e+2,0),'mmHg']);dx.push('代償：'+ck(e,pco2,'呼吸性アシドーシスの合併','呼吸性アルカローシスの合併'))}
+  if(prim==='代謝性アルカローシス'){const e=0.7*hco3+21;rows.push(['予測PaCO₂',f(e-2,0)+'–'+f(e+2,0),'mmHg']);dx.push('代償：'+ck(e,pco2,'呼吸性アシドーシスの合併','呼吸性アルカローシスの合併'))}
+  if(prim==='呼吸性アシドーシス'){const a=24+0.1*(pco2-40),c=24+0.35*(pco2-40);rows.push(['予測HCO₃⁻ 急性/慢性',f(a,1)+' / '+f(c,1),'mEq/L']);dx.push('代償：'+(hco3<a-2?'代謝性アシドーシスの合併':hco3>c+2?'代謝性アルカローシスの合併':hco3<=a+2?'急性の経過に合致':'慢性に合致'))}
+  if(prim==='呼吸性アルカローシス'){const a=24-0.2*(40-pco2),c=24-0.4*(40-pco2);rows.push(['予測HCO₃⁻ 急性/慢性',f(a,1)+' / '+f(c,1),'mEq/L']);dx.push('代償：'+(hco3>a+2?'代謝性アルカローシスの合併':hco3<c-2?'代謝性アシドーシスの合併':hco3>=a-2?'急性の経過に合致':'慢性に合致'))}}
+ if(isFinite(v.na)&&isFinite(v.cl)){const ag=v.na-v.cl-hco3,cag=isFinite(v.alb)?ag+2.5*(4-v.alb):ag,d=cag-12;mains.push([isFinite(v.alb)?'Alb補正AG':'AG',f(cag,1),'mEq/L',cag>14?'warn':'ok',cag>14?'AG開大':'AG正常']);
+  if(isFinite(v.alb))rows.push(['AG（補正前）',f(ag,1),'mEq/L']);rows.push(['ΔAG',f(d,1),'mEq/L'],['補正HCO₃⁻',f(hco3+d,1),'mEq/L',hco3+d>26||hco3+d<22?'warn':'ok']);
+  if(cag>14){dx.push('AG開大性代謝性アシドーシス');if(hco3<24){const r=d/(24-hco3);rows.push(['Δratio',f(r,2),'',r>=0.8&&r<=2?'ok':'warn']);dx.push('Δratio：'+(r<0.4?'AG正常アシドーシスが主体':r<0.8?'AG正常アシドーシスの併存':r<=2?'純粋なAG開大性':'代謝性アルカローシスの併存（または慢性呼吸性アシドーシスの代償）'))}}else if(hco3<22)dx.push('AG正常（高Cl性）代謝性アシドーシス')}
+ if(!mains.length){const e=1.5*hco3+8;return{main:['予測PaCO₂（Winter）',f(e-2,0)+'–'+f(e+2,0),'mmHg','info','HCO₃⁻のみ'],msg:'pH・PaCO₂を入れると一次性障害、Na・Clを入れるとAGまで評価します。'}}
+ const pred=[['代謝性アシドーシス → PaCO₂',f(1.5*hco3+6,0)+'–'+f(1.5*hco3+10,0),'mmHg'],['代謝性アルカローシス → PaCO₂',f(0.7*hco3+19,0)+'–'+f(0.7*hco3+23,0),'mmHg']];
+ if(isFinite(pco2))pred.push(['呼吸性アシドーシス → HCO₃⁻ 急性/慢性',f(24+0.1*(pco2-40),1)+' / '+f(24+0.35*(pco2-40),1),'mEq/L'],['呼吸性アルカローシス → HCO₃⁻ 急性/慢性',f(24-0.2*(40-pco2),1)+' / '+f(24-0.4*(40-pco2),1),'mEq/L']);
+ return{main:mains,rows,msg:dx.length?'<b>評価のまとめ</b>'+ul(dx):'',after:'<details class="more"><summary>代償の予測値一覧</summary><table class="rows" style="margin-top:0">'+pred.map(x=>'<tr><td>'+x[0]+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td></tr>').join('')+'</table></details>'}},
+ sections:[['混合性障害を疑う手がかり',EXPL(['pH正常なのに HCO₃⁻・PaCO₂ が異常','代償が予測範囲を外れる','Δratio が 0.8 未満または 2 超','HCO₃⁻ と PaCO₂ が逆方向に動く','病歴から複数の病態が想定される（敗血症＋嘔吐など）'])],
+ ['計算式・判定基準',FORM('代償 代謝性アシドーシス: PaCO₂ = 1.5×HCO₃⁻ + 8 ± 2（Winter）\n代償 代謝性アルカローシス: PaCO₂ = 0.7×HCO₃⁻ + 21 ± 2\n代償 呼吸性アシドーシス: PaCO₂ 10↑ごとに HCO₃⁻ 急性+1 / 慢性+3.5\n代償 呼吸性アルカローシス: PaCO₂ 10↓ごとに HCO₃⁻ 急性−2 / 慢性−4\nAG = Na − (Cl + HCO₃⁻)　補正AG = AG + 2.5×(4 − Alb)\nΔAG = AG − 12　補正HCO₃⁻ = HCO₃⁻ + ΔAG\nΔratio = ΔAG/(24 − HCO₃⁻)：<0.4 / 0.4–0.8 / 0.8–2 / >2')]]};
+CALC.hypona={name:'低Na血症の鑑別',sub:'浸透圧→尿→体液量で鑑別',desc:'血清浸透圧 → 尿浸透圧 → 尿Na・体液量の順に鑑別。',inputs:[N('na','Na','mEq/L',124),N('mosm','血清浸透圧（実測）','mOsm/kg',262),N('uosm','尿浸透圧','mOsm/kg',420),N('u_na','尿Na','mEq/L',45),SEL('vol','体液量',[['norm','正常'],['low','低下'],['high','過剰']],undefined,{full:true})],
+ compute(v){const sev=v.na<125?['bad','高度（<125）']:v.na<130?['warn','中等度']:v.na<135?['warn','軽度']:['ok','低Naなし'];let d;
+ if(v.mosm>295)d=['高張性：高血糖、マンニトール、造影剤'];else if(v.mosm>=275)d=['等張性：偽性低Na血症（高脂血症・高蛋白血症）'];else if(v.uosm<=100)d=['尿浸透圧 ≤100：心因性多飲、ビール多飲、低溶質摂取'];
+ else if(v.u_na<=30)d=['尿Na ≤30：有効循環血漿量の減少',v.vol==='high'?'浮腫あり → 心不全、肝硬変、ネフローゼ':'消化管喪失、サードスペース、利尿薬中止後'];
+ else d=['尿Na >30',v.vol==='low'?'体液量低下 → 利尿薬、塩類喪失性腎症、副腎不全、嘔吐':v.vol==='high'?'体液量過剰 → 腎不全':'体液量正常 → SIADH、副腎不全、甲状腺機能低下症、サイアザイド'];
+ return{main:['血清Na',f(v.na,0),'mEq/L',sev[0],sev[1]],msg:ul(d)+'補正は 10 mEq/L/24時間 以内（高リスク例は 8 以内）。症候性・高度では3%食塩液を検討。'}}};
+CALC.hyperna={name:'高Na血症の評価',sub:'尿浸透圧・尿量で原因分類',desc:'尿浸透圧と尿量から原因を分類。',inputs:[N('na','Na','mEq/L',156),N('uosm','尿浸透圧','mOsm/kg',680),N('uvolday','尿量','L/日',0.8)],
+ compute(v){const d=v.uosm>600?'濃縮能保持：不感蒸泄・消化管からの喪失、飲水不足':v.uosm<300?'濃縮障害：尿崩症（中枢性・腎性）。デスモプレシン反応で鑑別':'中間：浸透圧利尿、部分型尿崩症、ループ利尿薬';
+ return{main:['血清Na',f(v.na,0),'mEq/L',v.na>=160?'bad':v.na>145?'warn':'ok',v.na>=160?'高度':v.na>145?'高Na血症':'基準内'],msg:ul([d,v.uvolday>3?'尿量 >3 L/日：多尿':'多尿基準未満'])+'欠乏量は「自由水欠乏量・Na変化予測」で計算。'}}};
+CALC.hypok={name:'低K血症の鑑別',sub:'尿K/尿Cr比で腎性か判定',desc:'尿K/尿Cr比で腎性喪失を判定し、酸塩基・血圧で分類。',inputs:[N('k','K','mEq/L',2.8),N('u_k','尿K','mEq/L',25),UCR,SEL('ab','酸塩基',[['alk','アルカローシス'],['norm','正常'],['acid','アシドーシス']],undefined,{full:true}),SEL('bp','血圧',[['norm','正常〜低い'],['high','高い']],undefined,{full:true})],
+ compute(v){const r=v.u_k/(v.u_cr/100);let d;if(r<13)d=['尿K/Cr <13：腎外性喪失・細胞内移行','下痢・下剤、摂取不足、インスリン、β刺激薬、周期性四肢麻痺'];else if(v.ab==='acid')d=['腎性喪失＋アシドーシス','尿細管性アシドーシス、DKA、アセタゾラミド'];
+ else if(v.ab==='alk')d=v.bp==='high'?['腎性喪失＋アルカローシス＋高血圧','原発性アルドステロン症、Cushing、腎血管性高血圧、甘草']:['腎性喪失＋アルカローシス＋血圧正常','利尿薬、嘔吐（尿Cl低値）、Bartter/Gitelman'];else d=['腎性喪失','低Mg血症、薬剤（アムホテリシンB、シスプラチン）、浸透圧利尿'];
+ return{main:['血清K',f(v.k,1),'mEq/L',v.k<2.5?'bad':v.k<3.5?'warn':'ok',v.k<2.5?'高度':v.k<3.0?'中等度':v.k<3.5?'軽度':'基準内'],rows:[['尿K/尿Cr比',f(r,1),'mEq/gCr',r>=13?'warn':'ok']],msg:ul(d)}}};
+CALC.hyperk={name:'高K血症の評価',sub:'重症度・偽性・原因',desc:'重症度、偽性の除外、原因のチェック。',inputs:[N('k','K','mEq/L',6.3),CK('hk_ecg','心電図変化あり（テント状T、QRS開大、徐脈）',0),CK('hk_pseudo','溶血・採血手技・白血球/血小板著増の可能性',0),CK('hk_ckd','腎機能低下',0),CK('hk_drug','RAS阻害薬・MRA・ST合剤・NSAIDs・CNI',0),CK('hk_acid','代謝性アシドーシス・インスリン不足',0),CK('hk_tissue','組織崩壊（横紋筋融解・腫瘍崩壊・消化管出血）',0)],
+ compute(v){const sev=v.k>=6.5?['bad','高度（≥6.5）']:v.k>=6.0?['warn','中等度']:v.k>=5.5?['warn','軽度']:['ok','基準内'];const m=[];if(v.hk_pseudo)m.push('溶血のない検体で再検。');
+ if(v.hk_ecg||v.k>=6.5)m.push('緊急対応：心電図モニター、グルコン酸Ca静注、インスリン＋ブドウ糖、必要に応じβ刺激薬吸入・透析。');m.push('除去：ループ利尿薬、K吸着薬、透析。原因薬剤の中止・減量を検討。');
+ return{main:['血清K',f(v.k,1),'mEq/L',v.hk_ecg?'bad':sev[0],v.hk_ecg?'心電図変化あり':sev[1]],msg:ul(m)}}};
+CALC.hypoca={name:'低Ca血症の評価',sub:'Mg・P・PTHで原因推定',desc:'補正Ca・Mg・P・PTHのパターンで原因を推定。',inputs:[N('ca','血清Ca','mg/dL',7.4),ALB,N('mg','Mg','mg/dL',1.9),N('p','P','mg/dL',5.5),N('pth','intact PTH','pg/mL',30)],
+ compute(v){const c=v.alb<4?v.ca+(4-v.alb):v.ca;const d=v.mg<1.2?'低Mg血症によるPTH分泌・作用障害。まずMgを補正。':v.pth<65&&v.p>4.5?'PTH低値〜不適切正常＋高P：副甲状腺機能低下症':v.pth>=65&&v.p>4.5?'PTH高値＋高P：CKD、偽性副甲状腺機能低下症、腫瘍崩壊・横紋筋融解':v.pth>=65?'PTH高値＋P低〜正常：ビタミンD欠乏、膵炎、hungry bone':'非典型：薬剤（ビスホスホネート、デノスマブ）、敗血症、大量輸血を確認';
+ return{main:['補正Ca',f(c,1),'mg/dL',c<7.5?'bad':c<8.4?'warn':'ok',c<7.5?'高度':c<8.4?'低Ca':'基準内'],msg:ul([d])+'症候性（テタニー・痙攣・QT延長）はグルコン酸Ca静注を検討。'}}};
+CALC.hypomg={name:'低Mg血症の評価',sub:'FEMgで腎性か判定',desc:'FEMgで腎性喪失か消化管喪失かを判定。',inputs:[N('mg','Mg','mg/dL',1.2),N('u_mg','尿Mg','mg/dL',6),UCR,CR],
+ compute(v){const fe=(v.u_mg*v.cr)/(0.7*v.mg*v.u_cr)*100;return{main:['FEMg',f(fe,1),'%',fe>2?'warn':'info',fe>2?'>2% 腎性喪失':'≤2% 腎外性'],msg:fe>2?'利尿薬、シスプラチン、カルシニューリン阻害薬、アミノグリコシド、アルコール、Gitelman症候群。':'下痢、吸収不良、PPI長期使用、栄養不良、再栄養症候群。'}},sections:[['計算式',FORM('FEMg = (尿Mg × 血清Cr) / (0.7 × 血清Mg × 尿Cr) × 100')]]};
+CALC.hypop={name:'低P血症の評価',sub:'FEPO4で腎性か判定',desc:'FEPO4で腎性喪失か否かを判定。',inputs:[N('p','P','mg/dL',1.6),N('u_p','尿P','mg/dL',30),UCR,CR],
+ compute(v){const fe=(v.u_p*v.cr)/(v.p*v.u_cr)*100;return{main:['FEPO4',f(fe,1),'%',fe>5?'warn':'info',fe>5?'>5% 腎性喪失':'≤5% 腎外性'],msg:fe>5?'副甲状腺機能亢進、Fanconi症候群、FGF23関連（含糖酸化鉄投与後など）。':'再栄養症候群、DKA治療中、呼吸性アルカローシス、アルコール、P吸着薬。'}}};
+
+// ③ 輸血
+CALC.rbc={name:'RBC輸血後のHb予測',sub:'赤血球液でHbがどれだけ上がるか',desc:'循環血液量を 70 mL/kg として予測。',inputs:[WT,N('hb','現在のHb','g/dL',6.8),SEL('rbcu','投与量',[['1','1単位'],['2','2単位'],['4','4単位'],['6','6単位']],'2'),N('hbu','1単位あたりHb量','g',28)],
+ compute(v){const u=parseFloat(v.rbcu),inc=u*v.hbu/(v.wt*0.7);return{main:['予測Hb上昇',f(inc,1),'g/dL','info','→ 予測 '+f(v.hb+inc,1)+' g/dL'],rows:[['循環血液量',f(v.wt*0.07,2),'L']],msg:'1単位は献血200 mL由来（Hb約28 g）。出血・溶血が続くと予測より低くなる。'}},sections:[['計算式',FORM('予測上昇Hb = 投与Hb量 (g) / 循環血液量 (dL)')]]};
+CALC.pltx={name:'血小板輸血後の予測',sub:'濃厚血小板で血小板がどれだけ上がるか',desc:'輸血血小板の 2/3 が循環に残ると仮定。',inputs:[WT,N('plt','輸血前血小板','万/μL',1.2),SEL('pcu','投与量',[['10','10単位'],['15','15単位'],['20','20単位']])],
+ compute(v){const tot=parseFloat(v.pcu)*0.2e11,inc=tot/(v.wt*70*1000)*2/3/1e4;return{main:['予測増加数',f(inc,1),'万/μL','info','→ 予測 '+f(v.plt+inc,1)+' 万/μL'],msg:'発熱・感染・DIC・脾腫・抗HLA抗体があると上昇しにくい。'}},sections:[['計算式',FORM('予測増加数 = 輸血血小板総数 / (循環血液量 mL × 10³) × 2/3\n1単位 ≒ 0.2×10¹¹ 個')]]};
+
+// ④ 臨床スコア
+CALC.chads=SC({name:'CHA₂DS₂-VASc',sub:'心房細動の脳梗塞リスク',desc:'CHADS₂とCHA₂DS₂-VA（性別除く）も併記。',inputs:[SS('cv_age','年齢',[['0','65歳未満'],['1','65–74歳'],['2','75歳以上']],'0'),CK('cv_chf','心不全・左室機能低下',1),CK('cv_htn','高血圧',1),CK('cv_dm','糖尿病',1),CK('cv_stroke','脳梗塞・TIA・血栓塞栓症の既往',2),CK('cv_vasc','血管疾患（心筋梗塞・末梢動脈疾患・大動脈プラーク）',1),CK('cv_f','女性',1)],
+ interp(s,v){const r=s-(v.cv_f?1:0),ch=(v.cv_chf?1:0)+(v.cv_htn?1:0)+(v.cv_age==='2'?1:0)+(v.cv_dm?1:0)+(v.cv_stroke?2:0);return{lv:r>=2?'bad':r===1?'warn':'ok',tag:r>=2?'抗凝固療法を推奨':r===1?'抗凝固療法を考慮':'低リスク',rows:[['CHA₂DS₂-VA',String(r),'点'],['CHADS₂',String(ch),'点']],msg:'国内ガイドラインはCHADS₂を基本とし、ESC 2024はCHA₂DS₂-VAを採用。'}}});
+CALC.bleed={name:'出血リスク（HAS-BLED・ORBIT）',sub:'抗凝固薬の出血リスク',desc:'抗凝固療法中の出血リスクを2つのスコアで同時に評価。共通項目は1回の入力で済む。',
+ inputs:[AGE,SEX,CK('bl_htn','高血圧（収縮期 >160 mmHg）',0,{tag:'HAS-BLED'}),CK('bl_ren','透析・腎移植・Cr ≥2.26 mg/dL',0,{tag:'HAS-BLED'}),CK('bl_gfr','eGFR <60',0,{tag:'ORBIT'}),CK('bl_liv','肝機能障害（肝硬変、Bil >2倍＋AST/ALT >3倍）',0,{tag:'HAS-BLED'}),CK('bl_str','脳卒中の既往',0,{tag:'HAS-BLED'}),CK('bl_bl','出血の既往',0,{tag:'両方'}),CK('bl_anem','貧血（Hb 男 <13・女 <12 g/dL）',0,{tag:'両方'}),CK('bl_inr','不安定なINR（ワルファリン）',0,{tag:'HAS-BLED'}),CK('bl_ap','抗血小板薬の併用',0,{tag:'両方'}),CK('bl_nsaid','NSAIDsの併用',0,{tag:'HAS-BLED'}),CK('bl_alc','アルコール多飲',0,{tag:'HAS-BLED'})],
+ compute(v){const hb=(v.bl_htn?1:0)+(v.bl_ren?1:0)+(v.bl_liv?1:0)+(v.bl_str?1:0)+((v.bl_bl||v.bl_anem)?1:0)+(v.bl_inr?1:0)+(v.age>65?1:0)+((v.bl_ap||v.bl_nsaid)?1:0)+(v.bl_alc?1:0);
+ const ob=(v.bl_anem?2:0)+(v.age>=75?1:0)+(v.bl_bl?2:0)+((v.bl_gfr||v.bl_ren)?1:0)+(v.bl_ap?1:0);
+ return{main:[['HAS-BLED',String(hb),'点',hb>=3?'bad':'ok',hb>=3?'高リスク（≥3）':'低〜中リスク'],['ORBIT',String(ob),'点',ob>=4?'bad':ob===3?'warn':'ok',ob>=4?'高リスク（4–7）':ob===3?'中リスク（3）':'低リスク（0–2）']],msg:'高スコアは抗凝固を控える理由ではなく、是正できる因子（血圧・併用薬・飲酒・貧血）を見直す目安。'}},
+ sections:[['2つのスコアの違い',EXPL(['<b>HAS-BLED</b>：是正できる因子（血圧、INR、併用薬、飲酒）を多く含む。介入ポイントを探すのに向く。3点以上が高リスク。','<b>ORBIT</b>：項目が5つと少なく、大出血の予測能はHAS-BLEDと同等以上とされる。ESCガイドラインでも併記。4点以上が高リスク。','年齢はHAS-BLEDで65歳超、ORBITで75歳以上が加点（入力した年齢から自動判定）。'])]]};
+const gp={age:[[30,0],[40,8],[50,25],[60,41],[70,58],[80,75],[90,91],[1e9,100]],hr:[[50,0],[70,3],[90,9],[110,15],[150,24],[200,38],[1e9,46]],sbp:[[80,58],[100,53],[120,43],[140,34],[160,24],[200,10],[1e9,0]],cr:[[0.4,1],[0.8,4],[1.2,7],[1.6,10],[2.0,13],[4.0,21],[1e9,28]]};
+const gpt=(t,x)=>t.find(r=>x<r[0])[1];
+CALC.grace={name:'GRACE',sub:'急性冠症候群の院内死亡リスク',desc:'GRACE院内モデルのポイント表で算出。',isScore:true,inputs:[AGE,N('g_hr','心拍数','回/分',96),N('g_sbp','収縮期血圧','mmHg',112),CR,SS('g_kil','Killip分類',[['0','I 心不全なし'],['20','II ラ音・III音'],['39','III 肺水腫'],['59','IV 心原性ショック']],'0'),CK('g_ca','来院時の心停止',39),CK('g_st','ST変化',28),CK('g_mk','心筋マーカー上昇',14)],
+ compute(v,def){const s=gpt(gp.age,v.age)+gpt(gp.hr,v.g_hr)+gpt(gp.sbp,v.g_sbp)+gpt(gp.cr,v.cr)+sumScore(def,v);return{main:['合計',String(s),'点',s>140?'bad':s>108?'warn':'ok',s>140?'高リスク（>3%）':s>108?'中リスク（1–3%）':'低リスク（<1%）'],
+ rows:[['年齢',gpt(gp.age,v.age),'点'],['心拍数',gpt(gp.hr,v.g_hr),'点'],['収縮期血圧',gpt(gp.sbp,v.g_sbp),'点'],['Cr',gpt(gp.cr,v.cr),'点']]}},note:'リスク区分はNSTE-ACSの院内死亡（≤108 / 109–140 / >140）。ポイント表は採用前に原著で要確認。'};
+CALC.timi=SC({name:'TIMI（UA/NSTEMI）',sub:'不安定狭心症の重症度',desc:'不安定狭心症・NSTEMIの14日イベントリスク。',inputs:[CK('ti_age','65歳以上',1),CK('ti_rf','冠危険因子 3つ以上',1),CK('ti_cad','既知の冠動脈狭窄 ≥50%',1),CK('ti_asa','7日以内のアスピリン使用',1),CK('ti_ang','24時間以内に2回以上の狭心痛',1),CK('ti_st','0.5 mm以上のST変化',1),CK('ti_mk','心筋マーカー陽性',1)],
+ interp(s){const r=['4.7','4.7','8.3','13.2','19.9','26.2','40.9','40.9'][s];return{lv:s>=5?'bad':s>=3?'warn':'ok',tag:s>=5?'高リスク':s>=3?'中リスク':'低リスク',rows:[['14日の死亡・MI・緊急血行再建',r,'%']]}}});
+CALC.dapt={name:'DAPT期間（PRECISE-DAPT・DAPT score）',sub:'抗血小板薬2剤併用の期間',desc:'PCI時の「短くするか」と、1年後の「延ばすか」を1ページで評価。',
+ inputs:[H('共通'),AGE,SEX,WT,CR,H('PRECISE-DAPT','PCI時に評価'),N('pd_hb','Hb','g/dL',11.5),N('pd_wbc','白血球数','×10³/μL',7.5),CK('pd_bl','出血の既往（自然出血）',0),
+  H('DAPT score','PCIから1年後に評価'),CK('da_smk','喫煙',1),CK('da_dm','糖尿病',1),CK('da_mi','来院時の心筋梗塞',1),CK('da_pci','PCI・心筋梗塞の既往',1),CK('da_pes','パクリタキセル溶出ステント',1),CK('da_3mm','ステント径 3 mm未満',1),CK('da_hf','心不全またはLVEF <30%',2),CK('da_svg','静脈グラフトへのPCI',2)],
+ compute(v){const ccr=cg(v.age,v.wt,v.cr,v.sex),cl=(x,a,b)=>Math.min(b,Math.max(a,x));const a=cl(v.age,50,90),c=cl(ccr,0,100),h=cl(v.pd_hb,10,12),w=cl(v.pd_wbc,5,20);
+ const pd=cl((100/5.52784356)*(0.02595618*(a-50)-0.0140439*(c-100)-0.40551264*(h-12)+0.05697497*(w-5)+(v.pd_bl?1.41955653:0)),0,100);
+ const dage=v.age>=75?-2:v.age>=65?-1:0;let ds=dage;['da_smk','da_dm','da_mi','da_pci','da_pes','da_3mm'].forEach(k=>{if(v[k])ds+=1});if(v.da_hf)ds+=2;if(v.da_svg)ds+=2;
+ return{main:[['PRECISE-DAPT（PCI時）',f(pd,0),'点',pd>=25?'bad':'ok',pd>=25?'≥25 短期DAPT（3–6か月）を検討':'<25 標準〜長期DAPT（12–24か月）'],['DAPT score（1年後）',String(ds),'点',ds>=2?'warn':'info',ds>=2?'≥2 延長の利益が上回る可能性':'<2 延長は推奨されにくい']],rows:[['CG式 Ccr（PRECISE-DAPTに使用）',f(ccr,1),'mL/min'],['DAPT scoreの年齢点',String(dage),'点']]}},
+ sections:[['2つのスコアの違い',EXPL(['<b>PRECISE-DAPT</b>：PCI直後に使う。出血リスクだけを評価し、25点以上ならDAPTを短期間（3–6か月）にすることを検討。「短くするか」の判断。','<b>DAPT score</b>：PCIから1年間、イベントなくDAPTを続けられた患者に使う。虚血と出血の両方を見て、12か月を超えて延長するかを判断。「延ばすか」の判断。','国内のJCSガイドラインは、高出血リスクの判定にARC-HBR（日本版はJ-HBR）を用いる。'])],
+ ['計算式',FORM('PRECISE-DAPT = 100/5.5278 × [0.02596×(年齢−50) − 0.01404×(Ccr−100) − 0.40551×(Hb−12) + 0.05697×(WBC−5) + 1.41956×出血既往]\n（年齢50–90、Ccr ≤100、Hb 10–12、WBC 5–20 に丸めて計算）\nDAPT score: 年齢 ≥75 −2 / 65–74 −1、各項目 +1、心不全・静脈グラフト +2')]],note:'PRECISE-DAPTの係数は公開計算式に基づく。採用前に公式計算ツールと照合を。'};
+CALC.gdmt=SC({name:'Simple GDMTスコア',sub:'心不全治療薬の導入状況',desc:'4クラスの導入状況を選ぶだけで算出（0–9点）。',inputs:[SS('sg_ras','RAS阻害薬',[['0','なし'],['1','ACEi・ARB：最大量の50%未満'],['2','ACEi・ARB：最大量の50%以上'],['3','ARNI（用量問わず）']],'0'),SS('sg_bb','β遮断薬',[['0','なし'],['1','最大量の50%未満'],['2','最大量の50%以上']],'0'),SS('sg_mra','MRA',[['0','なし'],['2','あり（用量問わず）']],'0'),SS('sg_sglt','SGLT2阻害薬',[['0','なし'],['2','あり（用量問わず）']],'0')],
+ interp(s){return{lv:s>=5?'ok':'warn',tag:s>=5?'5点以上（予後良好と関連）':'5点未満：導入・増量の余地',msg:'原著では退院時5点以上が予後良好と関連。入院中のスコア上昇も予後改善と関連（Circ J 2024）。'}},
+ sections:[['50%判定の目安（国内最大量）',tbl(['薬剤','最大1日量（仮）','50%'],[['エナラプリル','10 mg','5 mg'],['リシノプリル','10 mg','5 mg'],['カンデサルタン','8 mg','4 mg'],['カルベジロール','20 mg','10 mg'],['ビソプロロール','5 mg','2.5 mg']])+'<p class="note">心不全適応の承認用量を仮置き。原著（Matsukawa R, ESC Heart Fail 2023）の補足表で要確認。</p>']]});
+const TDP=[CK('td_f','女性',1),CK('td_age','65歳以上',1),CK('td_k','低K血症',1),CK('td_mg','低Mg血症',1),CK('td_ca','低Ca血症',1),CK('td_brady','徐脈・房室ブロック',1),CK('td_hf','心不全・左室機能低下',1),CK('td_2','QT延長薬の2剤以上併用',1),CK('td_cyp','代謝阻害（CYP阻害薬・肝障害）',1),CK('td_rf','腎機能低下（腎排泄型QT延長薬）',1),CK('td_lqts','先天性QT延長症候群・失神歴',1)];
+CALC.qt={name:'QTc判定・TdPリスク',sub:'QT延長・不整脈の注意',desc:'電子カルテのQTc値で判定し、TdPの危険因子を確認。',inputs:[N('qtcv','QTc','ms',478),SEX,N('qtcb','ベースラインQTc（任意）','ms',440,{opt:true}),H('TdPの危険因子'),...TDP],
+ compute(v){const up=v.sex==='F'?460:450;let lv='ok',t='正常';if(v.qtcv>=500){lv='bad';t='≥500 ms 高リスク'}else if(v.qtcv>up){lv='warn';t='延長'}else if(v.qtcv<340){lv='warn';t='QT短縮'}const rows=[];
+ if(isFinite(v.qtcb)){const d=v.qtcv-v.qtcb;rows.push(['ベースラインから',(d>0?'+':'')+f(d,0),'ms',d>=60?'bad':'ok']);if(d>=60){lv='bad';t='60 ms以上の延長'}}
+ const n=TDP.filter(i=>v[i.id]).length+(v.qtcv>=500?1:0);rows.push(['TdP危険因子',String(n),'個',n>=3?'bad':n?'warn':'ok']);
+ return{main:['QTc',f(v.qtcv,0),'ms',lv,t],rows,msg:lv==='bad'||n>=3?'QT延長薬の中止・変更を検討。K ≥4.0、Mg ≥2.0 mg/dL を目安に補正し、心電図モニターを考慮。':''}},
+ sections:[['基準値',tbl(['区分','男性','女性'],[['正常','≤430 ms','≤450 ms'],['境界域','431–450 ms','451–470 ms'],['延長','>450 ms','>470 ms'],['高リスク（TdP注意）','≥500 ms、またはベースラインから60 ms以上の延長','同左'],['QT短縮','<340 ms（<360 msで要注意）','同左']])+'<p class="note">このページの判定はAHA/ACCFの推奨（男性 >450 ms、女性 >460 ms）を延長としている。</p>',true],
+  ['QTcB と QTcF の違い',EXPL(['<b>QTcB（Bazett式）</b>：QT ÷ √RR。多くの心電計が表示する値。心拍数が速い（概ね90回/分超）と過大評価、遅いと過小評価しやすい。','<b>QTcF（Fridericia式）</b>：QT ÷ ∛RR。心拍数の影響を受けにくく、頻脈・徐脈時や薬剤の臨床試験で推奨される。','頻脈時にQTcBで延長と出た場合は、QTcFでも確認すると過大評価を避けられる。'])],
+  ['QT延長リスク薬剤（代表例）',tbl(['分類','代表薬剤'],[['抗不整脈薬','アミオダロン、ソタロール、ジソピラミド、ベプリジル、ニフェカラント'],['抗菌・抗真菌薬','クラリスロマイシン、エリスロマイシン、アジスロマイシン、レボフロキサシン、モキシフロキサシン、フルコナゾール'],['抗精神病薬','ハロペリドール、クロルプロマジン、ドロペリドール、スルピリド'],['抗うつ薬','シタロプラム、エスシタロプラム、三環系'],['制吐薬など','オンダンセトロン、ドンペリドン'],['その他','メサドン、ドネペジル、シロスタゾール、ヒドロキシクロロキン、プロポフォール']])+'<p class="note">網羅的ではない。CredibleMeds（crediblemeds.org）と添付文書で確認。</p>']]};
+CALC.sofa=SC({name:'SOFA',sub:'臓器障害の重症度（敗血症）',desc:'ベースラインから2点以上の上昇で敗血症の臓器障害（原法）。',inputs:[SS('so_r','呼吸 PaO₂/FiO₂',[['0','≥400'],['1','<400'],['2','<300'],['3','<200（呼吸補助下）'],['4','<100（呼吸補助下）']],'0'),SS('so_c','凝固 血小板（×10³/μL）',[['0','≥150'],['1','<150'],['2','<100'],['3','<50'],['4','<20']],'0'),SS('so_l','肝 ビリルビン（mg/dL）',[['0','<1.2'],['1','1.2–1.9'],['2','2.0–5.9'],['3','6.0–11.9'],['4','≥12.0']],'0'),SS('so_cv','循環',[['0','MAP ≥70'],['1','MAP <70'],['2','DOA ≤5γ または DOB'],['3','DOA >5γ または NA ≤0.1γ'],['4','DOA >15γ または NA >0.1γ']],'0'),SS('so_n','中枢神経 GCS',[['0','15'],['1','13–14'],['2','10–12'],['3','6–9'],['4','<6']],'0'),SS('so_k','腎 Cr（mg/dL）・尿量',[['0','<1.2'],['1','1.2–1.9'],['2','2.0–3.4'],['3','3.5–4.9 または <500 mL/日'],['4','≥5.0 または <200 mL/日']],'0')],
+ interp(s){return{lv:s>=2?'bad':'ok',tag:s>=2?'臓器障害あり':'<2'}}});
+CALC.qsofa=SC({name:'qSOFA',sub:'敗血症の簡易スクリーニング',desc:'ICU外での敗血症スクリーニング。',inputs:[CK('qs_rr','呼吸数 ≥22回/分',1),CK('qs_m','意識変容（GCS <15）',1),CK('qs_bp','収縮期血圧 ≤100 mmHg',1)],
+ interp(s){return{lv:s>=2?'bad':'ok',tag:s>=2?'敗血症を疑う':'<2',msg:'感度が低いため除外には使わない。'}}});
+const nw={rr:x=>x<=8?3:x<=11?1:x<=20?0:x<=24?2:3,s1:x=>x<=91?3:x<=93?2:x<=95?1:0,sbp:x=>x<=90?3:x<=100?2:x<=110?1:x<=219?0:3,hr:x=>x<=40?3:x<=50?1:x<=90?0:x<=110?1:x<=130?2:3,t:x=>x<=35?3:x<=36?1:x<=38?0:x<=39?1:2};
+CALC.news2={name:'NEWS2',sub:'バイタルからみた急変リスク',desc:'バイタルサインの数値を入れると自動で点数化。',inputs:[N('nw_rr','呼吸数','回/分',22),N('nw_spo2','SpO₂','%',94),N('nw_sbp','収縮期血圧','mmHg',104),N('nw_hr','心拍数','回/分',112),N('nw_t','体温','℃',38.4,{step:.1}),SEL('nw_o2','酸素',[['0','室内気'],['2','酸素投与']]),SEL('nw_c','意識',[['0','清明'],['3','混乱・CVPU']],undefined,{full:true}),SEL('nw_scale','SpO₂スケール',[['1','Scale 1'],['2','Scale 2（CO₂貯留）']],undefined,{full:true})],
+ compute(v){let sp;if(v.nw_scale==='1')sp=nw.s1(v.nw_spo2);else{const x=v.nw_spo2;sp=x<=83?3:x<=85?2:x<=87?1:x<=92?0:v.nw_o2==='0'?0:x<=94?1:x<=96?2:3}
+ const p=[['呼吸数',nw.rr(v.nw_rr)],['SpO₂',sp],['酸素',+v.nw_o2],['収縮期血圧',nw.sbp(v.nw_sbp)],['心拍数',nw.hr(v.nw_hr)],['意識',+v.nw_c],['体温',nw.t(v.nw_t)]],s=p.reduce((a,b)=>a+b[1],0),a3=p.some(x=>x[1]===3);
+ return{main:['合計',String(s),'点',s>=7?'bad':s>=5||a3?'warn':'ok',s>=7?'高リスク':s>=5?'中リスク':a3?'単項目3点':'低リスク'],rows:p.map(x=>[x[0],String(x[1]),'点',x[1]===3?'bad':x[1]?'warn':undefined])}}};
+CALC.curb=SC({name:'CURB-65',sub:'肺炎の重症度（簡易）',desc:'市中肺炎の重症度。',inputs:[CK('cu_c','意識障害',1),CK('cu_u','BUN >19 mg/dL',1),CK('cu_r','呼吸数 ≥30回/分',1),CK('cu_b','収縮期 <90 または 拡張期 ≤60 mmHg',1),CK('cu_a','65歳以上',1)],
+ interp(s){return{lv:s>=3?'bad':s===2?'warn':'ok',tag:s>=3?'重症':s===2?'中等症':'軽症'}}});
+CALC.psi={name:'PSI（PORT）',sub:'肺炎の死亡リスク（詳細）',desc:'市中肺炎の30日死亡リスク分類。',isScore:true,inputs:[AGE,SEX,CK('ps_nh','介護施設入所',10),CK('ps_ca','悪性腫瘍',30),CK('ps_liv','肝疾患',20),CK('ps_hf','うっ血性心不全',10),CK('ps_cvd','脳血管疾患',10),CK('ps_ren','腎疾患',10),CK('ps_ams','意識障害',20),CK('ps_rr','呼吸数 ≥30回/分',20),CK('ps_bp','収縮期 <90 mmHg',20),CK('ps_t','体温 <35℃ または ≥40℃',15),CK('ps_hr','脈拍 ≥125回/分',10),CK('ps_ph','動脈血pH <7.35',30),CK('ps_bun','BUN ≥30 mg/dL',20),CK('ps_na','Na <130',20),CK('ps_glu','血糖 ≥250',10),CK('ps_hct','Hct <30%',10),CK('ps_po2','PaO₂ <60 または SpO₂ <90%',10),CK('ps_eff','胸水',10)],
+ compute(v,def){let s=v.sex==='F'?v.age-10:v.age;def.inputs.forEach(i=>{if(i.t==='c'&&v[i.id])s+=i.pts});const risk=['ps_ca','ps_liv','ps_hf','ps_cvd','ps_ren','ps_ams','ps_rr','ps_bp','ps_t','ps_hr','ps_nh'].some(k=>v[k]);
+ let c,m;if(v.age<=50&&!risk){c='I';m='0.1'}else if(s<=70){c='II';m='0.6'}else if(s<=90){c='III';m='0.9–2.8'}else if(s<=130){c='IV';m='8.2–9.3'}else{c='V';m='27–31'}
+ return{main:['クラス',c,'',(c==='IV'||c==='V')?'bad':c==='III'?'warn':'ok',s+' 点'],rows:[['30日死亡率',m,'%']],msg:'I–II：外来、III：短期入院または外来、IV–V：入院。'}}};
+CALC.fn={name:'FN評価（MASCC・CISNE）',sub:'発熱性好中球減少症のリスク',desc:'発熱性好中球減少症のリスクを2つのスコアで同時に評価。',isScore:true,
+ inputs:[H('MASCC','高いほど低リスク'),SS('ma_b','症状の程度',[['5','なし・軽度'],['3','中等度'],['0','重度']],'5'),CK('ma_bp','低血圧なし（収縮期 >90）',5),CK('ma_copd','COPDなし',4),CK('ma_tum','固形腫瘍、または真菌感染既往のない血液腫瘍',4),CK('ma_dh','輸液を要する脱水なし',3),CK('ma_out','発熱時に外来',3),CK('ma_age','60歳未満',2),
+  H('CISNE','固形腫瘍・安定例が対象'),CK('ci_ecog','ECOG PS ≥2',2),CK('ci_glu','ストレス性高血糖',2),CK('ci_copd','COPD',1),CK('ci_cvd','心血管疾患',1),CK('ci_muc','Grade 2以上の口内炎',1),CK('ci_mono','単球 <200/μL',1)],
+ compute(v,def){let m=0,c=0;def.inputs.forEach(i=>{if(!i.id)return;const s=i.t==='c'?(v[i.id]?i.pts:0):i.score?parseFloat(v[i.id])||0:0;if(i.id.startsWith('ma_'))m+=s;else if(i.id.startsWith('ci_'))c+=s});
+ return{main:[['MASCC',String(m),'点',m>=21?'ok':'bad',m>=21?'低リスク（≥21）':'高リスク（<21）'],['CISNE',String(c),'点',c>=3?'bad':c>=1?'warn':'ok',c>=3?'高リスク（≥3）':c>=1?'中リスク（1–2）':'低リスク（0）']]}},
+ sections:[['2つのスコアの違い',EXPL(['<b>MASCC</b>：FN全般（固形腫瘍・血液腫瘍）が対象。21点以上が低リスクで、外来治療を考慮できる症例の選別に使う。','<b>CISNE</b>：臨床的に安定して見える固形腫瘍患者が対象。MASCCで低リスクとされた中から、重篤化しうる症例を拾い出すのに優れる。','使い分け：まずMASCCで評価し、固形腫瘍で全身状態が安定していればCISNEも確認。'])]]};
+CALC.cfs=SC({name:'CFS',sub:'高齢者のフレイル度',desc:'Clinical Frailty Scale（臨床虚弱尺度）の9段階評価。',total:'CFS',inputs:[SS('cfs_v','状態',[['1','非常に健常'],['2','健常'],['3','健康管理しつつ元気'],['4','ごく軽度のフレイル'],['5','軽度のフレイル'],['6','中等度のフレイル'],['7','重度のフレイル'],['8','非常に重度のフレイル'],['9','疾患の終末期']],'1')],
+ interp(s){return{lv:s>=7?'bad':s>=5?'warn':'ok',tag:s>=5?'フレイル':s===4?'プレフレイル相当':'非フレイル'}}});
+CALC.nutri={name:'栄養指標（GNRI・PNI・CONUT）',sub:'採血からみた栄養状態',desc:'Alb・体重・身長・リンパ球数・総コレステロールから3指標を同時に算出。',inputs:[ALB,N('lym','リンパ球数','/μL',1100),WT,HT,N('tc','総コレステロール（任意）','mg/dL',150,{opt:true})],
+ compute(v){const ibw=22*Math.pow(v.ht/100,2),g=14.89*v.alb+41.7*Math.min(1,v.wt/ibw),p=10*v.alb+0.005*v.lym;const mains=[['GNRI',f(g,1),'',g<82?'bad':g<=98?'warn':'ok',g<82?'重度リスク':g<92?'中等度リスク':g<=98?'軽度リスク':'リスクなし'],['PNI（小野寺）',f(p,1),'',p<40?'bad':p<45?'warn':'ok',p<40?'<40 高リスク':p<45?'40–45':'≥45']];
+ if(isFinite(v.tc)){const a=v.alb>=3.5?0:v.alb>=3.0?2:v.alb>=2.5?4:6,l=v.lym>=1600?0:v.lym>=1200?1:v.lym>=800?2:3,c=v.tc>=180?0:v.tc>=140?1:v.tc>=100?2:3,s=a+l+c;mains.push(['CONUT',String(s),'点',s>=5?'bad':s>=2?'warn':'ok',s>=9?'高度不良':s>=5?'中等度不良':s>=2?'軽度不良':'正常'])}
+ return{main:mains,rows:[['理想体重（BMI 22）',f(ibw,1),'kg']]}},sections:[['計算式・判定基準',FORM('GNRI = 14.89×Alb + 41.7×(体重/理想体重)（比は最大1）\n　<82 重度 / 82–91 中等度 / 92–98 軽度 / >98 なし\nPNI = 10×Alb + 0.005×リンパ球数　<40 高リスク\nCONUT: Alb(0/2/4/6)＋リンパ球(0–3)＋T-cho(0–3)\n　0–1 正常 / 2–4 軽度 / 5–8 中等度 / 9–12 高度')]]};
+CALC.mnasf=SC({name:'MNA-SF',sub:'高齢者の栄養スクリーニング',desc:'簡易栄養状態評価（14点満点）。',inputs:[SS('mn_a','A 食事量の減少（3か月）',[['0','著しい減少'],['1','中等度の減少'],['2','減少なし']],'2'),SS('mn_b','B 体重減少（3か月）',[['0','3 kg以上'],['1','わからない'],['2','1–3 kg'],['3','なし']],'3'),SS('mn_c','C 移動能力',[['0','寝たきり・車椅子'],['1','離床可・外出不可'],['2','自由に外出']],'2'),SS('mn_d','D ストレス・急性疾患（3か月）',[['0','あり'],['2','なし']],'2'),SS('mn_e','E 神経・精神的問題',[['0','高度の認知症・うつ'],['1','軽度の認知症'],['2','なし']],'2'),SS('mn_f','F BMI（不可ならCC）',[['0','<19（CC <31）'],['1','19–20.9'],['2','21–22.9'],['3','≥23（CC ≥31）']],'3')],
+ interp(s){return{lv:s<=7?'bad':s<=11?'warn':'ok',tag:s<=7?'低栄養':s<=11?'低栄養のおそれ':'良好'}}});
+CALC.nrs=SC({name:'NRS-2002',sub:'入院患者の栄養リスク',desc:'入院患者の栄養リスクスクリーニング。',inputs:[SS('nr_n','栄養状態の障害',[['0','なし'],['1','軽度：3か月で5%超減少、摂取50–75%'],['2','中等度：2か月で5%超減少、BMI 18.5–20.5、摂取25–60%'],['3','高度：1か月で5%超減少、BMI <18.5、摂取0–25%']],'0'),SS('nr_d','疾患の重症度',[['0','なし'],['1','軽度：骨折、慢性疾患の急性増悪、透析、糖尿病、がん'],['2','中等度：腹部大手術、脳卒中、重症肺炎、血液悪性腫瘍'],['3','高度：頭部外傷、骨髄移植、ICU']],'0'),CK('nr_age','70歳以上',1)],
+ interp(s){return{lv:s>=3?'bad':'ok',tag:s>=3?'栄養リスクあり':'週1回再評価'}}});
+const MED=v=>v.vt_ctx==='med',SURG=v=>v.vt_ctx==='surg';
+CALC.vte={name:'VTE評価（Padua・IMPROVE・Caprini）',sub:'血栓症の予防が必要か',desc:'内科入院か外科かを選ぶと、使うスコアが切り替わる。内科はPadua→IMPROVEで予防方法まで判定。',isScore:true,
+ inputs:[SEL('vt_ctx','対象',[['med','内科入院'],['surg','外科（手術）']],undefined,{full:true}),AGE,
+  {...H('Padua','血栓リスク'),show:MED},...[['pa_ca','活動性のがん',3],['pa_vte','VTEの既往',3],['pa_mob','安静臥床（3日以上）',3],['pa_thr','血栓性素因',3],['pa_tr','1か月以内の外傷・手術',2],['pa_hf','心不全・呼吸不全',1],['pa_mi','急性心筋梗塞・脳梗塞',1],['pa_inf','急性感染症・リウマチ性疾患',1],['pa_bmi','BMI ≥30',1],['pa_hor','ホルモン療法中',1]].map(x=>({...CK(x[0],x[1],x[2]),show:MED})),
+  {...H('IMPROVE bleeding','出血リスク'),show:MED},{...SS('im_gfr','GFR',[['0','≥60'],['1','30–59'],['2.5','<30']],'0'),show:MED},...[['im_ulc','活動性の胃十二指腸潰瘍',4.5],['im_bl','3か月以内の出血',4],['im_plt','血小板 <5万/μL',4],['im_liv','肝不全（INR >1.5）',2.5],['im_icu','ICU/CCU入室',2.5],['im_cvc','中心静脈カテーテル',2],['im_rheu','リウマチ性疾患',2],['im_m','男性',1]].map(x=>({...CK(x[0],x[1],x[2]),show:MED})),
+  {...H('Caprini','外科のVTEリスク'),show:SURG},...[['cp_ms','小手術',1],['cp_bmi','BMI >25',1],['cp_leg','下肢の腫脹',1],['cp_var','静脈瘤',1],['cp_preg','妊娠中・産後',1],['cp_ob','原因不明の死産・習慣流産',1],['cp_oc','経口避妊薬・HRT',1],['cp_sep','敗血症（1か月以内）',1],['cp_lung','重症肺疾患・肺炎（1か月以内）',1],['cp_pft','呼吸機能異常',1],['cp_ami','急性心筋梗塞',1],['cp_chf','うっ血性心不全（1か月以内）',1],['cp_ibd','炎症性腸疾患',1],['cp_bed','内科的疾患で安静臥床',1],
+   ['cp_arth','関節鏡手術',2],['cp_open','45分超の開腹手術',2],['cp_lap','45分超の腹腔鏡手術',2],['cp_ca','悪性腫瘍',2],['cp_conf','72時間超の臥床',2],['cp_cast','ギプス固定',2],['cp_cvc','中心静脈カテーテル',2],
+   ['cp_vte','VTEの既往',3],['cp_fh','VTEの家族歴',3],['cp_thr','血栓性素因（第V因子Leiden、プロトロンビン変異、抗リン脂質抗体、高ホモシステイン血症、HITなど）',3],
+   ['cp_str','脳卒中（1か月以内）',5],['cp_arp','待機的下肢人工関節置換術',5],['cp_frac','股関節・骨盤・下肢骨折',5],['cp_sci','急性脊髄損傷（1か月以内）',5]].map(x=>({...CK(x[0],x[1],x[2]),show:SURG}))],
+ compute(v,def){const sum=p=>{let s=0;def.inputs.forEach(i=>{if(!i.id||!i.id.startsWith(p))return;if(i.t==='c'&&v[i.id])s+=i.pts;else if(i.t==='s'&&i.score)s+=parseFloat(v[i.id])||0});return s};
+ if(v.vt_ctx==='surg'){const ap=v.age>=75?3:v.age>=61?2:v.age>=41?1:0,s=sum('cp_')+ap;return{main:['Caprini',String(s),'点',s>=5?'bad':s>=3?'warn':'ok',s>=5?'高リスク':s>=3?'中リスク':s>=1?'低リスク':'超低リスク'],rows:[['年齢点（自動）',String(ap),'点']]}}
+ const pa=sum('pa_')+(v.age>=70?1:0),im=sum('im_')+(v.age>=85?3.5:v.age>=40?1.5:0);let rec,lv;if(pa<4){rec='薬物予防は不要。早期離床で対応';lv='ok'}else if(im>=7){rec='出血高リスク：機械的予防（弾性ストッキング・間欠的空気圧迫）を選択';lv='bad'}else{rec='抗凝固薬による予防を検討';lv='warn'}
+ return{main:[['判定',pa<4?'予防不要':im>=7?'機械的予防':'薬物予防を検討','',lv,'Padua＋IMPROVE'],['Padua',String(pa),'点',pa>=4?'bad':'ok',pa>=4?'血栓高リスク（≥4）':'低リスク（<4）'],['IMPROVE bleeding',f(im,im%1?1:0),'点',im>=7?'bad':'ok',im>=7?'出血高リスク（≥7）':'<7']],msg:rec+'。'}},
+ sections:[['3つのスコアの違い',EXPL(['<b>Padua</b>：内科の急性疾患で入院した患者の血栓リスク。4点以上が高リスク。','<b>IMPROVE bleeding</b>：同じく内科入院患者の出血リスク。Paduaが4点以上で薬物予防を考えるときに確認し、7点以上なら抗凝固薬を避けて機械的予防にする。','<b>Caprini</b>：外科・手術患者の血栓リスク。術式や手術時間も点数に入る。','年齢の点数は入力した年齢から自動で計算（Padua ≥70歳、IMPROVE 40–84歳/85歳以上、Caprini 41–60/61–74/75歳以上）。'])]]};
+CALC.t4=SC({name:'4Tスコア',sub:'ヘパリンによる血小板減少（HIT）',desc:'ヘパリン起因性血小板減少症の検査前確率。',inputs:[SS('t4_a','血小板減少',[['2','50%超減少 かつ 最低値 ≥2万'],['1','30–50%減少 または 最低値 1–1.9万'],['0','30%未満 または 最低値 <1万']],'0'),SS('t4_b','発症時期',[['2','投与5–10日、または30日以内の投与歴で1日以内'],['1','10日以降・時期不明、または30–100日以内の投与歴'],['0','投与歴なく4日以内']],'0'),SS('t4_c','血栓症・続発症',[['2','新規血栓、皮膚壊死、全身反応'],['1','血栓の進行・再発、紅斑、疑い'],['0','なし']],'0'),SS('t4_d','他の原因',[['2','明らかな他の原因なし'],['1','可能性あり'],['0','明らかな他の原因あり']],'0')],
+ interp(s){return{lv:s>=6?'bad':s>=4?'warn':'ok',tag:s>=6?'高確率':s>=4?'中間':'低確率',msg:s>=4?'ヘパリン中止・代替抗凝固薬と抗PF4/ヘパリン抗体検査を検討。':''}}});
+CALC.liver={name:'肝機能（Child-Pugh・ALBI）',sub:'肝機能の重症度・予備能',desc:'ビリルビン・Albは共通入力。Child-Pugh分類とALBIグレード（mALBI）を同時に表示。',
+ inputs:[N('tbil','総ビリルビン','mg/dL',1.4),ALB,SEL('ptmode','凝固',[['inr','PT-INR'],['pct','PT%']]),N('ptv','値','',1.3,{step:.01}),SEL('asc','腹水',[['1','なし'],['2','軽度'],['3','中等度以上']],undefined,{full:true}),SEL('enc','肝性脳症',[['1','なし'],['2','I–II度'],['3','III–IV度']],undefined,{full:true})],
+ compute(v){const b=v.tbil<2?1:v.tbil<=3?2:3,a=v.alb>3.5?1:v.alb>=2.8?2:3,p=v.ptmode==='inr'?(v.ptv<1.7?1:v.ptv<=2.3?2:3):(v.ptv>70?1:v.ptv>=40?2:3),s=b+a+p+(+v.asc)+(+v.enc),cls=s<=6?'A':s<=9?'B':'C';
+ const albi=0.66*Math.log10(v.tbil*17.1)-0.085*(v.alb*10),gr=albi<=-2.60?'1':albi<=-2.270?'2a':albi<=-1.39?'2b':'3';
+ return{main:[['Child-Pugh',cls,s+' 点',cls==='A'?'ok':cls==='B'?'warn':'bad',cls==='A'?'5–6点':cls==='B'?'7–9点':'10–15点'],['ALBI（mALBI）','Grade '+gr,'',gr==='1'?'ok':gr==='3'?'bad':'warn','ALBI '+f(albi,2)]],rows:[['ビリルビン',String(b),'点'],['Alb',String(a),'点'],['PT',String(p),'点'],['腹水',v.asc,'点'],['肝性脳症',v.enc,'点']]}},
+ sections:[['ALBIの使いどころ','<div class="expl">'+ul(['<b>肝細胞癌の薬物療法の判断</b>：レンバチニブ、アテゾリズマブ＋ベバシズマブなどはALBIグレード1・2aで治療成績がよいとされる。導入・継続を判断するときの肝予備能の目安。','<b>Child-Pugh Aの中の差を見る</b>：同じAでもALBIでは2bまで低下していることがある。数値で細かく追えるので、治療中の肝予備能の変化を経時的に確認するのに向く。','<b>客観的に評価できる</b>：腹水・脳症の判定が不要で、ビリルビンとAlbだけで計算できる。カルテ情報から評価しやすい。'])+'<p><b>注意</b></p>'+ul(['添付文書の肝機能障害時の用量調整・禁忌は多くが<b>Child-Pugh分類</b>で規定。投与量の判断はChild-Pughで行い、ALBIは補助的に使う。','Albは輸液・アルブミン製剤・ネフローゼ・低栄養で、ビリルビンは閉塞性黄疸・溶血でも変動する。該当時はALBIの解釈に注意。'])+'</div>'],
+  ['Child-PughとALBIの違い',EXPL(['<b>Child-Pugh</b>：肝硬変の重症度分類の基本。腹水・脳症という主観的な項目を含む。','<b>ALBI</b>：検査値2つだけの客観的な指標。Child-Pugh Aの中の差も細かく分けられる。'])],
+  ['計算式・判定基準',FORM('Child-Pugh（各1/2/3点）\n　ビリルビン <2 / 2–3 / >3 mg/dL\n　Alb >3.5 / 2.8–3.5 / <2.8 g/dL\n　PT-INR <1.7 / 1.7–2.3 / >2.3（PT% >70 / 40–70 / <40）\n　腹水 なし / 軽度 / 中等度以上、脳症 なし / I–II / III–IV\n　A 5–6、B 7–9、C 10–15点\nALBI = 0.66×log10(Bil μmol/L) − 0.085×Alb (g/L)\n　Grade 1 ≤−2.60 / 2a ≤−2.27 / 2b ≤−1.39 / 3 >−1.39')]]};
+
+// ⑤ 薬剤
+const GD={na:{n:'ノルアドレナリン',r:[0.03,0.3],set:{gamt:5,gunit:'mg',gvol:50}},dob:{n:'ドブタミン',r:[1,20],set:{gamt:150,gunit:'mg',gvol:50}},doa:{n:'ドパミン',r:[1,20],set:{gamt:150,gunit:'mg',gvol:50}},mil:{n:'ミルリノン',r:[0.05,0.75],set:{gamt:10,gunit:'mg',gvol:50}}};
+CALC.gamma={name:'Gamma（γ）計算',sub:'昇圧薬・強心薬の投与速度',desc:'γの計算と、目標γからの投与速度の逆算。薬剤を選ぶと代表的な希釈が入る。',inputs:[SEL('gdrug','薬剤',[['na','NAd'],['dob','DOB'],['doa','DOA'],['mil','ミルリノン']],'na',{full:true,apply:k=>GD[k].set}),WT,N('grate','投与速度','mL/hr',3,{step:.1}),N('gamt','薬剤量','',5),SEL('gunit','単位',[['mg','mg'],['ug','μg']]),N('gvol','最終液量','mL',50),N('gtarget','目標γ（任意）','γ',0.1,{opt:true,step:.01})],
+ compute(v){const d=GD[v.gdrug],c=v.gamt*(v.gunit==='mg'?1000:1)/v.gvol,um=c*v.grate/60,g=um/v.wt,out=g<d.r[0]||g>d.r[1];const mains=[['投与量',f(g,3),'μg/kg/min',out?'warn':'ok',out?'通常範囲外':'通常範囲内']];
+ if(isFinite(v.gtarget))mains.push(['目標 '+v.gtarget+' γ の速度',f(v.gtarget*v.wt*60/c,1),'mL/hr','info','逆算']);
+ return{main:mains,rows:[['濃度',f(c,1),'μg/mL'],['投与量',f(um,2),'μg/min'],['1 mL/hr あたり',f(c/60/v.wt,3),'γ']],msg:d.n+'の通常用量の目安：'+d.r.join('–')+' γ'+(v.gdrug==='mil'?'（腎機能低下時は減量）':'')+'。施設の希釈手順と照合。'}},
+ sections:[['計算式',FORM('濃度 (μg/mL) = 薬剤量 / 液量\nγ = 濃度 × 速度 / 60 / 体重\n速度 = 目標γ × 体重 × 60 / 濃度')]]};
+CALC.doac={name:'DOAC減量基準',sub:'抗凝固薬の用量判定',desc:'国内添付文書の基準で、CG式Ccr・年齢・体重から用量を判定。',inputs:[SEL('dd','薬剤',[['api','アピキサバン'],['riv','リバーロキサバン'],['edo','エドキサバン'],['dab','ダビガトラン']],'edo',{full:true,list:true}),SEL('dind','適応',[['af','NVAF'],['vte','VTE治療']],undefined,{full:true}),AGE,SEX,WT,CR,
+ CK('dpgp','P糖蛋白阻害薬の併用（ベラパミル・エリスロマイシン・シクロスポリンなど）',0),{...CK('dgib','消化管出血の既往',0),show:v=>v.dd==='dab'},{...CK('dhb','80歳以上かつ出血リスクが高い',0),show:v=>v.dd==='edo'&&v.dind==='af'}],
+ compute(v){const c=cg(v.age,v.wt,v.cr,v.sex),af=v.dind==='af';let dose='',lv='ok',why=[],note='';
+ if(v.dd==='api'){if(af){if(c<15){dose='禁忌';lv='bad';why=['Ccr <15']}else{why=[v.age>=80&&'80歳以上',v.wt<=60&&'体重 ≤60 kg',v.cr>=1.5&&'Cr ≥1.5'].filter(Boolean);if(why.length>=2){dose='2.5 mg 1日2回';lv='warn'}else dose='5 mg 1日2回';note='減量基準：80歳以上・体重 ≤60 kg・Cr ≥1.5 のうち2つ以上。'}}else{if(c<25){dose='禁忌';lv='bad';why=['Ccr <25']}else dose='10 mg 1日2回 7日間 → 5 mg 1日2回'}}
+ if(v.dd==='riv'){if(af){if(c<15){dose='禁忌';lv='bad';why=['Ccr <15']}else if(c<50){dose='10 mg 1日1回';lv='warn';why=['Ccr 15–49']}else dose='15 mg 1日1回'}else{if(c<30){dose='禁忌';lv='bad';why=['Ccr <30']}else dose='15 mg 1日2回 3週間 → 15 mg 1日1回'}}
+ if(v.dd==='edo'){const lim=af?15:30;if(c<lim){dose='禁忌';lv='bad';why=['Ccr <'+lim]}else{why=[v.wt<=60&&'体重 ≤60 kg',c<=50&&'Ccr ≤50',v.dpgp&&'P糖蛋白阻害薬'].filter(Boolean);if(why.length){dose='30 mg 1日1回';lv='warn'}else dose='60 mg 1日1回';if(af&&v.dhb&&v.age>=80){note='80歳以上・出血高リスクでは 15 mg 1日1回も選択肢。';lv='warn'}if(!af)note='初期に非経口抗凝固薬を投与してから開始。'}}
+ if(v.dd==='dab'){if(!af){dose='国内適応なし';lv='info'}else if(c<30){dose='禁忌';lv='bad';why=['Ccr <30']}else{why=[c<=50&&'Ccr 30–50',v.dpgp&&'P糖蛋白阻害薬',v.age>=70&&'70歳以上',v.dgib&&'消化管出血の既往'].filter(Boolean);if(why.length){dose='110 mg 1日2回を考慮';lv='warn'}else dose='150 mg 1日2回';note='イトラコナゾール（経口）併用は禁忌。'}}
+ return{main:['推奨用量',dose,'',lv,lv==='bad'?'投与不可':lv==='warn'?'減量・注意':lv==='info'?'対象外':'通常用量'],rows:[['CG式 Ccr',f(c,1),'mL/min'],['該当条件',why.length?why.join('、'):'なし','']],msg:note}},note:'国内添付文書に基づく判定。採用前に最新の添付文書で要確認。'};
+const SPEC={K:{el:39.10,val:1,salts:[['74.55','KCl'],['171.2','L-アスパラギン酸K']],prods:[['0','使わない'],['1','KCL補正液（1 mEq/mL）'],['1.0','アスパラギン酸K注（1 mEq/mL）']]},
+ Na:{el:22.99,val:1,salts:[['58.44','NaCl'],['84.01','NaHCO₃']],prods:[['0','使わない'],['1.711','10% NaCl（1.71 mEq/mL）'],['0.513','3% NaCl（0.513 mEq/mL）'],['0.833','7% 炭酸水素Na（0.833 mEq/mL）']]},
+ Mg:{el:24.31,val:2,salts:[['246.47','MgSO₄・7H₂O'],['203.3','MgCl₂・6H₂O']],prods:[['0','使わない'],['1','硫酸Mg補正液（1 mEq/mL）'],['0.81','硫酸Mg 10%（0.81 mEq/mL）']]},
+ Ca:{el:40.08,val:2,salts:[['448.4','グルコン酸Ca・H₂O'],['147.0','CaCl₂・2H₂O']],prods:[['0','使わない'],['0.39','グルコン酸Ca 8.5%（約0.39 mEq/mL）'],['1','塩化Ca補正液（1 mEq/mL）']]},
+ P:{el:30.97,val:0,salts:[],prods:[['0','使わない'],['0.5','リン酸Na補正液（P 0.5 mmol/mL）'],['0.50','リン酸二K補正液（P 0.5 mmol/mL）']]}};
+CALC.conv={name:'電解質の投与量換算',sub:'mEq・mmol・mg・製剤mL',desc:'K・Na・Mg・Ca・Pを切り替えて、mEq・mmol・mg・塩のg・製剤mLを相互換算。',inputs:[SEL('el','電解質',[['K','K'],['Na','Na'],['Mg','Mg'],['Ca','Ca'],['P','P']],'K',{full:true,reset:['cv_u','cv_salt','cv_prod']}),N('cv_amt','量','',20),
+ SEL('cv_u','単位',v=>{const s=SPEC[v.el];const u=s.val?[['meq','mEq'],['mmol','mmol'],['mg','mg']]:[['mmol','mmol'],['mg','mg']];if(s.salts.length)u.push(['g','g（塩）']);return u}),
+ SEL('cv_salt','塩の種類',v=>SPEC[v.el].salts,undefined,{show:v=>SPEC[v.el].salts.length>0,full:true}),SEL('cv_prod','製剤でmL換算',v=>SPEC[v.el].prods,undefined,{full:true})],
+ compute(v){const s=SPEC[v.el],a=v.cv_amt,u=v.cv_u,smw=parseFloat(v.cv_salt)||1;const mmol=u==='meq'?a/s.val:u==='mmol'?a:u==='mg'?a/s.el:a*1000/smw;const rows=[];if(s.val)rows.push(['mEq',f(mmol*s.val,2),'mEq']);rows.push(['mmol',f(mmol,2),'mmol'],[v.el+' 元素',f(mmol*s.el,0),'mg']);
+ if(s.salts.length)rows.push([s.salts.find(x=>x[0]===v.cv_salt)[1],f(mmol*smw/1000,3),'g']);const pc=parseFloat(v.cv_prod);let main=[s.val?'mEq':'mmol',f(s.val?mmol*s.val:mmol,2),s.val?'mEq':'mmol','info','換算'];
+ if(pc)main=['製剤量',f((s.val?mmol*s.val:mmol)/pc,1),'mL','info',s.prods.find(x=>x[0]===v.cv_prod)[1].split('（')[0]];
+ return{main,rows,msg:v.el==='P'?'リン酸はpHで価数が変わるため mmol で扱う。製剤のNa・K含有量も確認。':v.el==='K'?'K 1 mEq = 1 mmol = 39.1 mg、KCl 1 g = 13.4 mEq。':''}},note:'製剤濃度は代表値。採用製剤の添付文書で確認。'};
+CALC.krate={name:'K投与速度',sub:'K濃度・速度の上限チェック',desc:'輸液中のK濃度と投与速度を添付文書上の上限と照合。',inputs:[N('kbag','輸液中のK総量','mEq',20),N('bagvol','輸液量','mL',500),N('krate_r','投与速度','mL/hr',80)],
+ compute(v){const c=v.kbag/v.bagvol*1000,r=v.kbag/v.bagvol*v.krate_r;return{main:['K投与速度',f(r,1),'mEq/hr',r>20?'bad':r>10?'warn':'ok',r>20?'上限超過':'≤20 mEq/hr'],rows:[['K濃度',f(c,0),'mEq/L',c>40?'bad':'ok'],['投与時間',f(v.bagvol/v.krate_r,1),'時間']],msg:'KCl注の目安：濃度 40 mEq/L 以下、速度 20 mEq/hr 以下、1日 100 mEq 以下。'}}};
+CALC.mix={name:'輸液の混合計算',sub:'最終電解質濃度・浸透圧',desc:'複数の輸液・補正液を混ぜたときの最終電解質濃度と理論浸透圧。',custom:true};
+
+const CATS=[
+ {n:'腎機能',s:'Ccr・eGFR・CKD・AKI・FE',ic:'kidney',subs:[['推算・評価','gauge',['egfr']],['CKD','kidney',['ckd','mbd']],['AKI','alert',['aki']],['尿細管機能・尿検査','flask',['fe','urine','osm','cfw']]]},
+ {n:'電解質・血液ガス',s:'補正計算・酸塩基・異常の鑑別',ic:'flask',subs:[['補正・計算','calc',['nacorr','fwd','ca','kdef','mgref','pref','osm']],['酸塩基平衡','ph',['bga']],['電解質異常の評価','alert',['hypona','hyperna','hypok','hyperk','hypoca','hypomg','hypop']]]},
+ {n:'輸血',s:'Hb・血小板の上昇予測',ic:'drop',subs:[['輸血関連計算','drop',['rbc','pltx']]]},
+ {n:'臨床スコア',s:'循環器・感染症・栄養・血栓・肝',ic:'clip',subs:[['循環器','heart',['chads','bleed','grace','timi','dapt']],['心不全・心電図','pulse',['gdmt','qt']],['感染症','thermo',['sofa','qsofa','news2','curb','psi','fn']],['高齢者・栄養','person',['cfs','nutri','mnasf','nrs']],['血栓・出血','shield',['vte','t4']],['肝機能','liver',['liver']]]},
+ {n:'薬剤',s:'γ計算・DOAC・輸液計算',ic:'pill',subs:[['投与量設計','syringe',['gamma','doac']],['輸液・投与計算','ivbag',['conv','krate','mix']]]}];
+const MIXP={ns:['生理食塩液',154,0,154,0,0,0],d5:['5%ブドウ糖液',0,0,0,0,0,50],lr:['乳酸リンゲル液',130,4,109,3,28,0],ar:['酢酸リンゲル液',130,4,109,3,28,0],t1:['1号液（開始液）',90,0,70,0,20,26],t3:['3号液（維持液）',35,20,35,0,20,43],na10:['10% NaCl',1711,0,1711,0,0,0],na3:['3% NaCl',513,0,513,0,0,0],kcl:['KCL補正液',0,1000,1000,0,0,0],d50:['50%ブドウ糖液',0,0,0,0,0,500]};
+let MIX=[{p:'t3',v:''},{p:'kcl',v:''}];
+function subOf(id){for(let ci=0;ci<CATS.length;ci++)for(const s of CATS[ci].subs)if(s[2].includes(id))return{ci,s};return null}
+const store={get(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let FAV=store.get('mc_fav').filter(id=>CALC[id]),REC=store.get('mc_rec').filter(id=>CALC[id]);
+
+let view={t:'home'};
+function tileItem(id){const d=CALC[id],so=subOf(id);return'<button type="button" class="tile sm" data-go="'+id+'"><span class="ico">'+icon(so?so.s[1]:'calc')+'</span><span class="tn">'+esc(d.name)+'</span><span class="ts">'+esc(d.sub||'')+'</span></button>'}
+function homeHTML(){const q=(S._q||'').trim().toLowerCase();let h='<div class="hello"><img class="app-ic" src="icon-192.png" alt=""><b>病棟薬剤師用 医学電卓</b></div><input class="search" id="q" type="search" placeholder="計算・スコアを検索（例：出血、FENa）" value="'+esc(S._q||'')+'" aria-label="検索">';
+ if(q){const ids=Object.keys(CALC).filter(id=>{const so=subOf(id);return(CALC[id].name+' '+(CALC[id].sub||'')+' '+(so?CATS[so.ci].n+so.s[0]:'')).toLowerCase().includes(q)});return h+'<div class="sec-t">検索結果 '+ids.length+'件</div>'+(ids.length?'<div class="tiles">'+ids.map(tileItem).join('')+'</div>':'<p class="empty">該当する項目がありません。</p>')}
+ if(FAV.length)h+='<div class="sec-t">よく使う</div><div class="quick">'+FAV.map(id=>'<button type="button" class="qchip" data-go="'+id+'">★ '+esc(CALC[id].name)+'</button>').join('')+'</div>';
+ const rec=REC.filter(id=>!FAV.includes(id)).slice(0,6);if(rec.length)h+='<div class="sec-row"><div class="sec-t">最近使った</div><button type="button" class="mini-clear" data-recclear>クリア</button></div><div class="quick">'+rec.map(id=>'<button type="button" class="qchip" data-go="'+id+'">'+esc(CALC[id].name)+'</button>').join('')+'</div>';
+ h+='<div class="sec-t">カテゴリー</div><div class="tiles cats">'+CATS.map((c,i)=>'<button type="button" class="tile" data-cat="'+i+'"><span class="ico">'+icon(c.ic)+'</span><span class="tn">'+c.n+'</span><span class="ts">'+c.s+'</span></button>').join('')+'</div>';
+ return h+'<p class="foot">計算画面の ☆ で「よく使う」に追加できます。年齢・体重・Cr などは計算をまたいで値を引き継ぎます（ページを閉じると消えます）。計算式・基準値は院内採用前に検証してください。</p>'}
+function catHTML(ci){const c=CATS[ci];return'<div class="bar"><button type="button" class="icon-btn" data-back aria-label="戻る">‹</button><h1>'+c.n+'</h1></div>'+c.subs.map(s=>'<div class="sub">'+icon(s[1])+s[0]+'</div><div class="tiles">'+s[2].map(tileItem).join('')+'</div>').join('')}
+function getV(i){return S[i.id]!==undefined?S[i.id]:(i.t==='n'?'':i.t==='c'?false:i.def)}
+function optsOf(i,v){return typeof i.opts==='function'?i.opts(v):i.opts}
+function rawVals(def){const v={};def.inputs.forEach(i=>{if(i.t==='h')return;let x=getV(i);if(i.t==='s'){const o=optsOf(i,v);if(!o.some(p=>p[0]===x))x=o[0]&&o[0][0]}v[i.id]=i.t==='n'?num(x):i.t==='c'?!!x:x});return v}
+function fieldHTML(i,v,def){
+ if(i.t==='h')return'<div class="grp">'+i.label+(i.small?'<small>'+i.small+'</small>':'')+'</div>';
+ if(i.t==='n'){const val=getV(i);return'<div class="fld'+(i.full?' full':'')+'"><label for="f_'+i.id+'">'+i.label+'</label><div class="inwrap"><input id="f_'+i.id+'" data-k="'+i.id+'" type="number" inputmode="decimal" step="'+(i.step||'any')+'" value="'+esc(val)+'"'+(i.ex!==undefined?' placeholder="例 '+i.ex+'"':'')+'>'+(i.unit?'<span>'+i.unit+'</span>':'')+'</div></div>'}
+ if(i.t==='s'){const o=optsOf(i,v),val=v[i.id];
+  if(i.score||i.list)return'<div class="fld full"><span class="lbl">'+i.label+'</span><div class="rlist" role="radiogroup">'+o.map(p=>'<button type="button" class="opt" role="radio" aria-pressed="'+(p[0]===val)+'" aria-checked="'+(p[0]===val)+'" data-k="'+i.id+'" data-v="'+p[0]+'"><span class="dot"></span><span>'+p[1]+'</span>'+(i.score?'<span class="pts">'+(parseFloat(p[0])>0?'+':'')+p[0]+'</span>':'')+'</button>').join('')+'</div></div>';
+  const short=o.length<=5&&o.every(p=>p[1].length<=(o.length<=2?14:o.length===3?9:6));
+  if(short)return'<div class="fld'+(i.full||o.length>2?' full':'')+'"><span class="lbl">'+i.label+'</span><div class="seg" role="radiogroup">'+o.map(p=>'<button type="button" role="radio" aria-pressed="'+(p[0]===val)+'" aria-checked="'+(p[0]===val)+'" data-k="'+i.id+'" data-v="'+p[0]+'">'+p[1]+'</button>').join('')+'</div></div>';
+  return'<div class="fld full"><label for="f_'+i.id+'">'+i.label+'</label><select id="f_'+i.id+'" data-k="'+i.id+'">'+o.map(p=>'<option value="'+p[0]+'"'+(p[0]===val?' selected':'')+'>'+p[1]+'</option>').join('')+'</select></div>'}
+ if(i.t==='c')return'<button type="button" class="opt" role="checkbox" aria-pressed="'+!!v[i.id]+'" aria-checked="'+!!v[i.id]+'" data-k="'+i.id+'" data-c="1"><span class="box"></span><span>'+i.label+'</span>'+(i.tag?'<span class="stag">'+i.tag+'</span>':def.isScore&&i.pts?'<span class="pts">+'+i.pts+'</span>':'')+'</button>';return''}
+function fieldsHTML(def){const v=rawVals(def);let h='',buf='';const flush=()=>{if(buf){h+='<div class="fld full"><div class="rlist">'+buf+'</div></div>';buf=''}};
+ def.inputs.forEach(i=>{if(i.show&&!i.show(v))return;if(i.t==='c'){buf+=fieldHTML(i,v,def);return}flush();h+=fieldHTML(i,v,def)});flush();return h}
+const LVT={ok:'基準内',warn:'注意',bad:'要対応',info:'参考'};
+function compute(def){const v=rawVals(def);const miss=def.inputs.some(i=>i.t==='n'&&!i.opt&&(!i.show||i.show(v))&&!isFinite(v[i.id]));if(miss)return null;try{return def.compute(v,def)}catch(e){return null}}
+function mainHTML(m,sm){return'<div class="mn'+(sm?' sm':'')+'"><div class="lab">'+m[0]+'</div><div class="val"><span class="num">'+m[1]+'</span><span class="unit">'+(m[2]||'')+'</span>'+(m[3]?'<span class="chip lv-'+m[3]+'">'+(m[4]||LVT[m[3]])+'</span>':'')+'</div></div>'}
+function resultHTML(r){if(!r)return'<p class="empty">必要な項目を入力すると結果を表示します。</p>';const ms=Array.isArray(r.main[0])?r.main:[r.main];
+ let h='<div class="mains">'+ms.map((m,i)=>mainHTML(m,i>0)).join('')+'</div>';
+ if(r.rows&&r.rows.length)h+='<table class="rows">'+r.rows.map(x=>'<tr><td>'+x[0]+'</td><td>'+(x[3]&&x[3]!=='ok'?'<span class="chip lv-'+x[3]+'">'+x[1]+'</span>':x[1])+'</td><td>'+(x[2]||'')+'</td></tr>').join('')+'</table>';
+ if(r.extra)h+=r.extra;if(r.msg)h+='<div class="msg">'+r.msg+'</div>';if(r.after)h+=r.after;return h}
+function dock(r){if(!r){$('#dock-in').innerHTML='<span><span class="dl">結果</span><span class="dv" style="font-size:1rem">入力待ち</span></span>';return}const m=Array.isArray(r.main[0])?r.main[0]:r.main;
+ $('#dock-in').innerHTML='<span style="min-width:0"><span class="dl">'+m[0]+'</span><span class="dv">'+m[1]+'</span><span class="du">'+(m[2]||'')+'</span></span>'+(m[3]?'<span class="chip lv-'+m[3]+'">'+(m[4]||LVT[m[3]])+'</span>':'')}
+function update(){const r=compute(CALC[view.id]);$('#res').innerHTML=resultHTML(r);dock(r)}
+function calcHTML(id){const d=CALC[id],fav=FAV.includes(id);let h='<div class="bar"><button type="button" class="icon-btn" data-back aria-label="戻る">‹</button><h1>'+esc(d.name)+'</h1><button type="button" class="icon-btn star'+(fav?' on':'')+'" data-fav aria-label="よく使う">'+(fav?'★':'☆')+'</button></div><p class="desc">'+d.desc+'</p>';
+ if(d.custom)return h+'<section class="card"><div class="card-h">混合する輸液<button type="button" class="clear-btn" id="mixclr">'+icon('clear')+'クリア</button></div><div id="mixrows"></div><button type="button" class="add" id="mixadd">＋ 輸液を追加</button></section><section class="card" id="res-card"><div class="card-h">混合後</div><div id="res"></div><details class="more"><summary>計算式</summary>'+FORM('最終濃度 = Σ(濃度 × 液量) / 総液量\n理論浸透圧 ≒ Na + K + Cl + 乳酸/酢酸 + Ca/2 + ブドウ糖(mmol/L)\n浸透圧比 = 理論浸透圧 / 285')+'</details></section><p class="note">組成は代表的な製剤の値。採用製剤で確認。</p>';
+ return h+'<section class="card"><div class="card-h">入力<button type="button" class="clear-btn" data-clear>'+icon('clear')+'クリア</button></div><div class="fields" id="fields">'+fieldsHTML(d)+'</div></section><section class="card" id="res-card"><div class="card-h">結果</div><div id="res"></div>'+
+  (d.sections||[]).map(s=>'<details class="more"'+(s[2]?' open':'')+'><summary>'+s[0]+'</summary>'+s[1]+'</details>').join('')+'</section>'+(d.note?'<p class="note">'+d.note+'</p>':'')}
+function render(){const app=$('#app'),dk=$('#dock');dk.hidden=view.t!=='calc';
+ if(view.t==='home'){app.innerHTML=homeHTML();return}if(view.t==='cat'){app.innerHTML=catHTML(view.ci);return}
+ app.innerHTML=calcHTML(view.id);if(CALC[view.id].custom)bindMix();else update()}
+function refreshFields(){$('#fields').innerHTML=fieldsHTML(CALC[view.id]);update()}
+function bindMix(){const opts=Object.entries(MIXP).map(([k,x])=>'<option value="'+k+'">'+x[0]+'</option>').join('');
+ const draw=()=>{$('#mixrows').innerHTML=MIX.map((r,i)=>'<div class="mix-row"><select data-i="'+i+'" data-f="p" aria-label="輸液">'+opts.replace('value="'+r.p+'"','value="'+r.p+'" selected')+'</select><div class="inwrap"><input type="number" inputmode="decimal" data-i="'+i+'" data-f="v" value="'+esc(r.v)+'" placeholder="例 '+(i?20:500)+'" aria-label="液量"><span>mL</span></div><button type="button" class="del" data-del="'+i+'" aria-label="削除">×</button></div>').join('');calc()};
+ const calc=()=>{let V=0,t=[0,0,0,0,0,0];MIX.forEach(r=>{const p=MIXP[r.p],vl=num(r.v)||0;V+=vl;for(let j=0;j<6;j++)t[j]+=p[j+1]*vl});if(!V){$('#res').innerHTML='<p class="empty">液量を入力してください。</p>';dock(null);return}
+  const[na,k,cl,ca,b,g]=t.map(x=>x/V),osm=na+k+cl+b+ca/2+g/180*1000,ratio=osm/285;
+  const r={main:[['K濃度',f(k,1),'mEq/L',k>40?'bad':'ok',k>40?'40超':'≤40'],['理論浸透圧',f(osm,0),'mOsm/L',ratio>3?'bad':ratio>1.5?'warn':'ok','浸透圧比 '+f(ratio,2)]],rows:[['総液量',f(V,0),'mL'],['Na',f(na,1),'mEq/L'],['Cl',f(cl,1),'mEq/L'],['ブドウ糖',f(g/10,2),'%']],msg:(k>40?'K濃度が 40 mEq/L を超えている（KCl注の上限）。':'')+(ratio>3?' 浸透圧比 3 超は末梢静脈投与に不向き。':'')};
+  $('#res').innerHTML=resultHTML(r);dock(r)};
+ draw();const box=$('#mixrows');const set=e=>{const i=e.target.dataset.i;if(i===undefined)return;MIX[i][e.target.dataset.f]=e.target.value;calc()};box.addEventListener('input',set);box.addEventListener('change',set);
+ box.addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;MIX.splice(+b.dataset.del,1);draw()});$('#mixadd').onclick=()=>{MIX.push({p:'ns',v:''});draw()};$('#mixclr').onclick=()=>{MIX=[{p:'t3',v:''},{p:'kcl',v:''}];draw()}}
+const stack=[];
+function hashOf(v){return v.t==='calc'?v.id:v.t==='cat'?'cat'+v.ci:''}
+function nav(v,push=true){if(push)stack.push(view);view=v;if(v.t==='calc'){REC=[v.id,...REC.filter(x=>x!==v.id)].slice(0,10);store.set('mc_rec',REC)}try{history.replaceState(null,'',hashOf(v)?'#'+hashOf(v):location.pathname+location.search)}catch(e){}render();window.scrollTo(0,0)}
+function back(){let p=stack.pop();if(!p){const so=view.t==='calc'?subOf(view.id):null;p=so?{t:'cat',ci:so.ci}:{t:'home'}}nav(p,false)}
+$('#app').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.hasAttribute('data-recclear')){REC=[];store.set('mc_rec',REC);render();return}
+ if(t.dataset.go){nav({t:'calc',id:t.dataset.go});return}if(t.dataset.cat!==undefined){nav({t:'cat',ci:+t.dataset.cat});return}if(t.hasAttribute('data-back')){back();return}
+ if(t.hasAttribute('data-fav')){const id=view.id;FAV=FAV.includes(id)?FAV.filter(x=>x!==id):[...FAV,id];store.set('mc_fav',FAV);const on=FAV.includes(id);t.classList.toggle('on',on);t.textContent=on?'★':'☆';return}
+ if(t.hasAttribute('data-clear')){CALC[view.id].inputs.forEach(i=>{if(i.id)delete S[i.id]});refreshFields();return}
+ const k=t.dataset.k;if(!k||view.t!=='calc')return;const d=CALC[view.id],i=d.inputs.find(x=>x.id===k);
+ if(t.dataset.c){S[k]=!rawVals(d)[k]}else{S[k]=t.dataset.v;if(i.apply)Object.assign(S,i.apply(t.dataset.v));if(i.reset)i.reset.forEach(r=>delete S[r])}refreshFields()});
+$('#app').addEventListener('input',e=>{if(e.target.id==='q'){S._q=e.target.value;const pos=e.target.selectionStart;$('#app').innerHTML=homeHTML();const q=$('#q');q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}return}
+ const k=e.target.dataset.k;if(!k||view.t!=='calc'||CALC[view.id].custom)return;S[k]=e.target.value;if(e.target.tagName==='SELECT'){refreshFields();return}update()});
+$('#app').addEventListener('change',e=>{const k=e.target.dataset.k;if(k&&e.target.tagName==='SELECT'&&view.t==='calc'&&!CALC[view.id].custom){S[k]=e.target.value;refreshFields()}});
+$('#dock').onclick=()=>{const r=$('#res-card');if(r)r.scrollIntoView({behavior:'smooth',block:'start'})};
+function fromHash(){const h=location.hash.slice(1);if(CALC[h])return{t:'calc',id:h};const m=/^cat(\d)$/.exec(h);if(m&&CATS[+m[1]])return{t:'cat',ci:+m[1]};return{t:'home'}}
+window.addEventListener('hashchange',()=>{const v=fromHash();if(hashOf(v)!==hashOf(view)){view=v;render()}});
+view=fromHash();render();
+// オフライン対応（Service Worker）
+if('serviceWorker' in navigator&&location.protocol==='https:'){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})})}
+</script>
+
+</body>
+</html>
